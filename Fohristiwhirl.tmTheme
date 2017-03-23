@@ -40,7 +40,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>punctuation, meta.group, meta.block, meta.property, variable.other, support.class</string>
+			<string>source, punctuation, meta.group, meta.block, meta.property, variable.other, variable.parameter, support.class, meta.function-call</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
@@ -64,7 +64,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>meta.function, meta.function.declaration, entity.name.function</string>
+			<string>entity.name.function, storage.type.function.arrow</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
@@ -76,7 +76,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>storage.type, support.function.builtin, meta.function-call, meta.function-call.method, meta.function.return-type, keyword</string>
+			<string>keyword, storage.type, support.function.builtin, support.function.mutator, meta.function.return-type, variable.function</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
@@ -88,11 +88,23 @@
 
 		<dict>
 			<key>scope</key>
-			<string>support.class.builtin</string>
+			<string>support.class.builtin, support.class.node</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
 				<string>#FFFF66</string>
+			</dict>
+		</dict>
+
+		<!-- BLUE -->
+
+		<dict>
+			<key>scope</key>
+			<string>constant.character</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#80DCE7</string>
 			</dict>
 		</dict>
 
