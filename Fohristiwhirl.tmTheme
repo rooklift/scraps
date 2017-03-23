@@ -100,7 +100,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>constant.character</string>
+			<string>constant.character, constant.other</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
