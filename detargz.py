@@ -43,7 +43,10 @@ print("Output dir  = {}\n".format(outdir))
 
 print("Inspecting contents:\n")
 for item in infile:
-	print(os.path.realpath(item.name)[len(dir):])
+	try:
+		print(os.path.realpath(item.name)[len(dir):])
+	except:
+		print("<exception while printing>")
 	if ".." in item.name:
 		print("\nWARNING: Item contains \"..\"!")
 		print("Allow? [yes/no]")
