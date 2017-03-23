@@ -76,7 +76,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>keyword,  support.function.builtin, support.function.mutator, meta.function.return-type, variable.function, storage.type</string>
+			<string>keyword, support.function, meta.function.return-type, variable.function, storage.type</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
