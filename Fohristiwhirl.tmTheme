@@ -88,7 +88,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>support.class.builtin, support.class.node, entity.name.class, entity.name.struct</string>
+			<string>support.class.builtin, support.class.node, entity.name.class, entity.name.struct, constant.other.placeholder</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
@@ -100,7 +100,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>constant.character, constant.other</string>
+			<string>constant.character, punctuation.definition.group.regexp</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
