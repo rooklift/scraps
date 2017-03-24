@@ -88,7 +88,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>support.class.builtin, support.class.node, entity.name.class, entity.name.struct, entity.other.inherited-class, constant.other.placeholder, support.type.object</string>
+			<string>entity.name, support.class.builtin, support.class.node, entity.other.inherited-class, constant.other.placeholder, support.type.object</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
