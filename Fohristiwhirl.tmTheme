@@ -40,7 +40,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>source, punctuation, meta.block, meta.property, variable.other, variable.parameter, support.class</string>
+			<string>source</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
@@ -64,7 +64,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>entity.name.function, storage.type.function.arrow, storage.type.function.inline, support.function.magic</string>
+			<string>entity.name.function, storage.type.function.arrow, storage.type.function.inline</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
@@ -76,7 +76,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>keyword, support.function, variable.function, storage.type, support.type</string>
+			<string>keyword, variable.function, storage.type, support.type, support.function - entity.name</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
@@ -105,6 +105,18 @@
 			<dict>
 				<key>foreground</key>
 				<string>#80dce7</string>
+			</dict>
+		</dict>
+
+		<!-- red, solely used to find what scopes do -->
+
+		<dict>
+			<key>scope</key>
+			<string>__unused__</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#ff0000</string>
 			</dict>
 		</dict>
 
