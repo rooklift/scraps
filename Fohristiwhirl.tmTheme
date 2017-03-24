@@ -40,7 +40,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>source</string>
+			<string>source, support.type.exception</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
