@@ -52,7 +52,7 @@
 
 		<dict>
 			<key>scope</key>
-			<string>string, constant</string>
+			<string>string, constant, keyword.other.unit</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
