@@ -36,7 +36,7 @@ for filename in all_files:
     root.safe_commit("KM", 6.5)
 
     for key in ["GN", "HA", "TT", "TM", "TC", "AP"]:
-        root.safe_commit(key, "")
+        root.delete_property(key)
 
     for key in ["PW", "PB"]:
     	orig = root.properties[key][0]
