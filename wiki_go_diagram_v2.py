@@ -10,6 +10,7 @@ import gofish
 
 
 class Move():
+
 	def __init__(self, colour, number, x, y):
 		assert(colour in ["b", "w"])
 		self.colour = colour
@@ -28,21 +29,51 @@ class Move():
 
 class Record():
 
-	def __init__(self, size = 19):
-		self.size = size
-		self.array = [[[] for x in range(self.size + 1)] for y in range(self.size + 1)]
+	def __init__(self, root):
+
+		self.size = int(root.get_value("SZ"))
 		self.total_adds = 0
 
+		self.moves = [[[] for x in range(self.size + 1)] for y in range(self.size + 1)]
+		self.positions = dict()
+
+		node = root
+
+		while 1:
+			self.add(node)
+			if len(node.children) == 0:
+				break
+			else:
+				node = node.children[0]
+
 	def add(self, node):
+		self.add_move(node)
+		self.add_position(node)
 		self.total_adds += 1
+
+	def add_move(self, node):
 		move = node.what_was_the_move()
 		if move == None:
 			return
 		x, y = move
 		colour = "b" if node.move_colour() == gofish.BLACK else "w"
 
-		move = Move(colour, self.total_adds, x, y)
-		self.array[x][y].append(move)
+		move = Move(colour, node.moves_made, x, y)
+		self.moves[x][y].append(move)
+
+	def add_position(self, node):
+		ascii_array = [["  " for x in range(self.size + 1)] for y in range(self.size + 1)]
+
+		for x in range(self.size + 1):
+			for y in range(self.size + 1):
+				s = "  "
+				if node.board.state[x][y] == gofish.BLACK:
+					s = "b "
+				if node.board.state[x][y] == gofish.WHITE:
+					s = "w "
+				ascii_array[x][y] = s
+
+		self.positions[node.moves_made] = ascii_array
 
 	def print(self):
 		self.warnings = []
@@ -55,19 +86,23 @@ class Record():
 		print("\n".join(self.warnings))
 
 	def print_part(self, start, end):
-		ascii_array = [["  " for x in range(self.size + 1)] for y in range(self.size + 1)]
+
+		# The following can fail if start is 1 and there is no position recorded for 0 moves made
+		# because the root contained a move...
+
+		try:
+			ascii_array = copy.deepcopy(self.positions[start - 1])
+		except KeyError:
+			ascii_array = [["  " for x in range(self.size + 1)] for y in range(self.size + 1)]
 
 		for x in range(self.size + 1):
 			for y in range(self.size + 1):
-				for move in self.array[x][y]:
-					if move.number <= end:
-						if move.number < start:
-							ascii_array[x][y] = move.colour + " "
+				for move in self.moves[x][y]:
+					if start <= move.number <= end:
+						if ascii_array[x][y] == "  ":
+							ascii_array[x][y] = move.representation()
 						else:
-							if ascii_array[x][y] == "  ":
-								ascii_array[x][y] = move.representation()
-							else:
-								self.warnings.append("{} at {}".format(move.number, self.array[x][y][0].number))
+							self.warnings.append("{} at {}".format(move.number, self.moves[x][y][0].number))
 
 		print("{{Goban")
 		for y in range(1, len(ascii_array)):
@@ -79,22 +114,8 @@ class Record():
 
 
 def main():
-
-	node = gofish.load(sys.argv[1])
-
-	record = Record(int(node.get_value("SZ")))
-
-	# Note that we assume no moves in the root.
-
-	while 1:
-
-		if len(node.children) == 0:
-			break
-		else:
-			node = node.children[0]
-
-		record.add(node)
-
+	root = gofish.load(sys.argv[1])
+	record = Record(root)
 	record.print()
 
 
