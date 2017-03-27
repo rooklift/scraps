@@ -107,27 +107,39 @@ class Record():
 
 		warnings = []
 
+		highest_move_shown = 0
+
 		for x in range(self.size + 1):
 			for y in range(self.size + 1):
 				for move in self.moves[x][y]:
 					if start <= move.number <= end:
+						if move.number > highest_move_shown:
+							highest_move_shown = move.number
 						if ascii_array[x][y] == "  ":
 							ascii_array[x][y] = move.representation()
 						else:
 							warnings.append(Warning(move.number, self.moves[x][y][0].number))
 
+		warnings = sorted(warnings)
+		str_warnings = list(map(str, warnings))
+
+		if len(str_warnings) == 0:
+			warn_string = ""
+		else:
+			warn_string = "(" + ", ".join(str_warnings) + ")"
+
 		print()
-		print("{{Goban")
+		print('{| style="display:inline; display:inline-table;"')
+		print('| style="border: solid thin; padding: 2px;" |')
+		print('{{Goban')
 		for y in range(1, len(ascii_array)):
 			for x in range(1, len(ascii_array)):
 				print("|{}".format(ascii_array[x][y]), end="")
 			print()
-		print("|20}}")
-
-		if warnings:
-			print()
-			for w in sorted(warnings):
-				print(w)
+		print('|20}}')
+		print('|-')
+		print('| style="text-align:center" | Moves {} to {} {}'.format(start, highest_move_shown, warn_string))
+		print('|}')
 
 
 def main():
