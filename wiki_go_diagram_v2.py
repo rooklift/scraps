@@ -4,7 +4,7 @@
 #	- No fruity ordering (e.g. two black moves in a row)
 
 
-import copy, itertools, sys
+import copy, sys
 import gofish
 
 
