@@ -9,6 +9,21 @@ import copy, sys
 import gofish
 
 
+class Warning():
+	def __init__(self, new, old):
+		self.new = new
+		self.old = old
+
+	def __lt__(self, other):
+		if self.new < other.new:
+			return True
+		else:
+			return False
+
+	def __str__(self):
+		return "{} at {}".format(self.new, self.old)
+
+
 class Move():
 
 	def __init__(self, colour, number, x, y):
@@ -76,14 +91,9 @@ class Record():
 		self.positions[node.moves_made] = ascii_array
 
 	def print(self):
-		self.warnings = []
-
 		self.print_part(1, 99)
-
 		for n in range(100, self.total_adds + 1, 100):
 			self.print_part(n, n + 99)
-
-		print("\n".join(self.warnings))
 
 	def print_part(self, start, end):
 
@@ -95,6 +105,8 @@ class Record():
 		except KeyError:
 			ascii_array = [["  " for x in range(self.size + 1)] for y in range(self.size + 1)]
 
+		warnings = []
+
 		for x in range(self.size + 1):
 			for y in range(self.size + 1):
 				for move in self.moves[x][y]:
@@ -102,15 +114,20 @@ class Record():
 						if ascii_array[x][y] == "  ":
 							ascii_array[x][y] = move.representation()
 						else:
-							self.warnings.append("{} at {}".format(move.number, self.moves[x][y][0].number))
+							warnings.append(Warning(move.number, self.moves[x][y][0].number))
 
+		print()
 		print("{{Goban")
 		for y in range(1, len(ascii_array)):
 			for x in range(1, len(ascii_array)):
 				print("|{}".format(ascii_array[x][y]), end="")
 			print()
 		print("|20}}")
-		print()
+
+		if warnings:
+			print()
+			for w in sorted(warnings):
+				print(w)
 
 
 def main():
