@@ -66,8 +66,7 @@ class Record():
 							else:
 								self.warnings.append("{} at {}".format(move.number, self.array[x][y][0].number))
 						else:
-							if ascii_array[x][y] == "  ":
-								ascii_array[x][y] = move.colour + " "
+							ascii_array[x][y] = move.colour + " "
 
 		print("{{Goban")
 		for y in range(1, len(ascii_array)):
