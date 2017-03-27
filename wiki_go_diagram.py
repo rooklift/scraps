@@ -4,6 +4,8 @@ import gofish
 
 get_next_terminator = itertools.count(start = 99, step = 100)
 
+all_warnings = []
+
 
 def print_diagram(array):
 
@@ -15,6 +17,7 @@ def print_diagram(array):
 		print()
 
 	print('|20}}')
+	print()
 
 
 def add_move_to_array(node, array):
@@ -28,7 +31,11 @@ def add_move_to_array(node, array):
 		val = "00"
 	if len(val) == 1:
 		val = char_from_colour(node.move_colour()) + val
-	array[x][y] = val
+
+	if array[x][y] != "  " and array[x][y] != "w " and array[x][y] != "b ":
+		all_warnings.append("{} at {}".format(node.moves_made, array[x][y]))
+	else:
+		array[x][y] = val
 
 
 def char_from_colour(colour, pad = False):
@@ -84,6 +91,9 @@ def main():
 			array = get_and_convert_board(node)
 
 		add_move_to_array(node, array)
+
+	for warning in all_warnings:
+		print(warning)
 
 
 if __name__ == "__main__":
