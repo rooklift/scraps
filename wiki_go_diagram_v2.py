@@ -1,10 +1,3 @@
-
-# Assumptions:
-#	- No moves in root
-#	- No handicap
-#	- No fruity ordering (e.g. two black moves in a row)
-
-
 import copy, sys
 import gofish
 
