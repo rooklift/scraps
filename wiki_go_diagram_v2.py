@@ -1,6 +1,7 @@
 
 # Assumptions:
 #	- No moves in root
+#	- No handicap
 #	- No fruity ordering (e.g. two black moves in a row)
 
 
@@ -60,13 +61,13 @@ class Record():
 			for y in range(self.size + 1):
 				for move in self.array[x][y]:
 					if move.number <= end:
-						if move.number >= start:
+						if move.number < start:
+							ascii_array[x][y] = move.colour + " "
+						else:
 							if ascii_array[x][y] == "  ":
 								ascii_array[x][y] = move.representation()
 							else:
 								self.warnings.append("{} at {}".format(move.number, self.array[x][y][0].number))
-						else:
-							ascii_array[x][y] = move.colour + " "
 
 		print("{{Goban")
 		for y in range(1, len(ascii_array)):
