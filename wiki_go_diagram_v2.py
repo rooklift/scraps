@@ -62,7 +62,7 @@ class Record():
 				node = node.children[0]
 
 	# Each item in the self.moves list is itself an array of moves for that spot.
-	# Each item in the self.positions dict is a 2D array of strings representing a board.
+	# Each item in the self.positions dict is a 2D array of strings representing the board after n moves (where n is the key).
 
 	def add(self, node):
 		self.add_move(node)
