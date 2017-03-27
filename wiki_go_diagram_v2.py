@@ -82,7 +82,7 @@ def main():
 
 	node = gofish.load(sys.argv[1])
 
-	record = Record()
+	record = Record(int(node.get_value("SZ")))
 
 	# Note that we assume no moves in the root.
 
