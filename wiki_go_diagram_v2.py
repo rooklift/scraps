@@ -3,6 +3,7 @@ import gofish
 
 
 class Warning():
+
 	def __init__(self, new, old):
 		self.new = new
 		self.old = old
@@ -26,7 +27,7 @@ class Move():
 		self.x = x
 		self.y = y
 
-	def representation(self):
+	def __str__(self):
 		val = self.number % 100
 		if val == 0:
 			return "00"
@@ -112,12 +113,12 @@ class Record():
 						if move.number > highest_move_shown:
 							highest_move_shown = move.number
 						if ascii_array[x][y] == "  ":
-							ascii_array[x][y] = move.representation()
+							ascii_array[x][y] = str(move)
 						else:
 							warnings.append(Warning(move.number, self.moves[x][y][0].number))
 
 		warnings = sorted(warnings)
-		str_warnings = list(map(str, warnings))
+		str_warnings = [str(w) for w in warnings]
 
 		if len(str_warnings) == 0:
 			warn_string = ""
