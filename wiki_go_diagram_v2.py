@@ -42,6 +42,7 @@ class Record():
 
 		self.size = int(root.get_value("SZ"))
 		self.total_adds = 0
+		self.first_mover = None
 
 		self.moves = [[[] for x in range(self.size + 1)] for y in range(self.size + 1)]
 		self.positions = dict()
@@ -59,21 +60,29 @@ class Record():
 	# Each item in the self.positions dict is a 2D array of strings representing the board after n moves (where n is the key).
 
 	def add(self, node):
-		self.add_move(node)
-		self.add_position(node)
+
+		# The Wikipedia {{Goban}} expects White to be even. If White moves first,
+		# we must adjust move numbers by 1 to make this so.
+
+		number = node.moves_made if self.first_mover in ["b", None] else node.moves_made + 1
+
+		self.add_move(node, number)
+		self.add_position(node, number)
 		self.total_adds += 1
 
-	def add_move(self, node):
+	def add_move(self, node, number):
 		move = node.what_was_the_move()
 		if move == None:
 			return
 		x, y = move
 		colour = "b" if node.move_colour() == gofish.BLACK else "w"
+		if self.first_mover == None:
+			self.first_mover = colour
 
-		move = Move(colour, node.moves_made, x, y)
+		move = Move(colour, number, x, y)
 		self.moves[x][y].append(move)
 
-	def add_position(self, node):
+	def add_position(self, node, number):
 		ascii_array = [["  " for x in range(self.size + 1)] for y in range(self.size + 1)]
 
 		for x in range(self.size + 1):
@@ -85,7 +94,7 @@ class Record():
 					s = "w "
 				ascii_array[x][y] = s
 
-		self.positions[node.moves_made] = ascii_array
+		self.positions[number] = ascii_array
 
 	def print(self):
 		self.print_part(1, 99)
