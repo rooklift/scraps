@@ -62,7 +62,7 @@ func main_handler(writer http.ResponseWriter, request * http.Request) {
 			writer.Write(buffer[0:chars])
 		}
 
-		// Note that the first call writer.Write triggers a header write, including auto-detecting Content-Type.
+		// Note that the first call to writer.Write triggers a header write, including auto-detecting Content-Type.
 
 		if err != nil {
 			return
