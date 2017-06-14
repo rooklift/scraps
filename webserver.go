@@ -52,6 +52,8 @@ func main_handler(writer http.ResponseWriter, request * http.Request) {
 		return
 	}
 
+	defer infile.Close()
+
 	buffer := make([]byte, 1024)
 
 	for {
