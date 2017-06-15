@@ -52,7 +52,7 @@ func main()  {
 		}
 
 		fmt.Println()
-		fmt.Printf(string(dump)[0:upperbound])
+		os.Stdout.Write(dump[0:upperbound])
 		fmt.Println()
 		fmt.Println()
 
