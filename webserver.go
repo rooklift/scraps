@@ -51,8 +51,10 @@ func file_from_request(request * http.Request, files_dir string) (infile *os.Fil
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, 404, "Not Found", ""
+		} else if os.IsPermission(err) {
+			return nil, 403, "Forbidden", ""
 		} else {
-			return nil, 500, "Internal Error (os.Stat() failed but not because the file didn't exist)", ""
+			return nil, 500, "Internal Error (os.Stat() failed for mysterious reasons)", ""
 		}
 	}
 
