@@ -39,6 +39,7 @@ func succeed() {
 	defer infile.Close()
 	if err != nil {
 		fail("Something went wrong while attempting to read the archive.")
+		return
 	}
 	fmt.Printf("Content-type: %s\n\n", FILE_FORMAT)
 	io.Copy(os.Stdout, infile)
