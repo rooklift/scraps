@@ -17,7 +17,7 @@ const (
 
 	WAIT_SECONDS = 10
 	FILE_FORMAT = "application/zip"
-	ZIPFILE = "FIXME"								// The file we are guarding.
+	FILENAME = "throttle_cgi.go"					// The file we are guarding.
 	LAST_REQUEST_FILE = "FIXME"						// Where to store our log.
 )
 
@@ -27,17 +27,15 @@ func refuse(next time.Time) {
 	fmt.Printf("Content-type: text/plain\n\n")
 	fmt.Printf("Downloads are limited to one download every %d seconds.\n", WAIT_SECONDS)
 	fmt.Printf("Next possible download is at: %s\n", next.Format(TIME_FORMAT))
-	os.Exit(0)
 }
 
 func fail(msg string) {
 	fmt.Printf("Content-type: text/plain\n\n")
 	fmt.Printf("%s\n", msg)
-	os.Exit(1)
 }
 
-func allow() {
-	infile, err := os.Open(ZIPFILE)
+func succeed() {
+	infile, err := os.Open(FILENAME)
 	defer infile.Close()
 	if err != nil {
 		fail("Something went wrong while attempting to read the archive.")
@@ -46,45 +44,58 @@ func allow() {
 	io.Copy(os.Stdout, infile)
 }
 
-func check_last() {
+func last_success() (time.Time, error) {
 
-	// Aborts program if insufficient time has elapsed since last request.
-	// If the log file is not present, creates it and refuses the request.
-
-	lrf, err := os.Open(LAST_REQUEST_FILE)
-	defer lrf.Close()
+	log, err := os.Open(LAST_REQUEST_FILE)
+	defer log.Close()
 
 	if err != nil {
-		update_last()
-		refuse(time.Now().UTC().Add(WAIT_TIME))
+		err = update_last()
+		if err != nil {
+			return time.Time{}, fmt.Errorf("last_success(): error in update_last(): %v", err)
+		}
+		return time.Now().UTC(), nil
 	}
 
-	scanner := bufio.NewScanner(lrf)
+	scanner := bufio.NewScanner(log)
 	scanner.Scan()
 
 	last_time, err := time.Parse(TIME_FORMAT, scanner.Text())
 	if err != nil {
-		fail("Couldn't parse last request time.")
+		return time.Time{}, fmt.Errorf("last_success(): couldn't parse last request time: %v", err)
 	}
 
-	if time.Now().UTC().Sub(last_time) > WAIT_TIME {
-		return
-	}
-
-	refuse(last_time.Add(WAIT_TIME))
+	return last_time, nil
 }
 
-func update_last() {
+func update_last() error {
+
 	log, err := os.Create(LAST_REQUEST_FILE)
 	defer log.Close()
 	if err != nil {
-		fail("Couldn't update last request log.")
+		return err
 	}
-	fmt.Fprintf(log, "%s\n", time.Now().UTC().Format(TIME_FORMAT))
+
+	_, err = fmt.Fprintf(log, "%s\n", time.Now().UTC().Format(TIME_FORMAT))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func main() {
-	check_last()	// Aborts program if needed.
-	update_last()
-	allow()
+	last_time, err := last_success()
+	if err != nil {
+		fail(fmt.Sprintf("%v", err))
+	} else if time.Now().UTC().Sub(last_time) < WAIT_TIME {
+		refuse(last_time.Add(WAIT_TIME))
+	} else {
+		err = update_last()
+		if err != nil {
+			fail(fmt.Sprintf("%v", err))
+		} else {
+			succeed()
+		}
+	}
 }
