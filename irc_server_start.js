@@ -87,16 +87,22 @@ function new_channel(chan_name) {
 	};
 
 	channel.add_user = (conn) => {
+
 		if (conn && conn.nick) {
+
 			channel.users[conn.nick] = conn;
 			conn.channels[chan_name] = true;
-		}
 
-		channel.msg(conn, "JOIN", chan_name);
+			channel.msg(conn, "JOIN", chan_name);
+		}
 	}
 
 	channel.delete_user = (conn) => {
+
 		if (conn && conn.nick) {
+
+			channel.msg(conn, "PART", chan_name);
+
 			delete channel.users[conn.nick];
 			delete conn.channels[chan_name];
 		}
