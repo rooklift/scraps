@@ -27,7 +27,6 @@ function new_connection(socket) {
 	function handle_line(data) {
 
 		let tokens = data.toString().split(" ");
-		console.log(tokens);
 
 		if (tokens[0] === "NICK") {
 			if (tokens[1]) {
@@ -195,6 +194,8 @@ function make_irc() {
 			}
 
 			irc.all_channels[chan_name].delete_user(conn);
+			log(conn, `leaving ${chan_name}`);
+
 			if (Object.keys(irc.all_channels[chan_name].users).length === 0) {
 				delete irc.all_channels[chan_name];
 				console.log(`Closed channel ${chan_name}`);
