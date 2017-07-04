@@ -17,11 +17,13 @@ function is_alphanumeric(str) {
 
 	for (i = 0, len = str.length; i < len; i++) {
 		code = str.charCodeAt(i);
-		if ((code > 47 && code < 58) || (code > 64 && code < 91) || (code > 96 && code < 123)) {
-			return true;
+		if ((code >= 48 && code <= 57) || (code >= 65 && code <= 90) || (code >= 97 && code <= 122)) {
+			continue;
+		} else {
+			return false;
 		}
 	}
-	return false;	// returns false on empty string
+	return true;	// returns true on empty string
 };
 
 function nick_is_legal(str) {
@@ -244,6 +246,8 @@ function new_connection(socket) {
 				} else {
 					conn.numeric(433, ":Nickname is already in use");
 				}
+			} else {
+				conn.numeric(432, ":Erroneus nickname");
 			}
 		}
 
