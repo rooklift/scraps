@@ -1,17 +1,141 @@
 "use strict";
 
-// The start of an IRC server.
+// The start of an IRC server...
+// See https://modern.ircdocs.horse for useful docs.
 
 const net = require("net");
 
 const SERVER = "127.0.0.1";
 const PORT = 6667;
 
+const WELCOME_MSG = ":Welcome to the server!"
 
-function log(conn, msg) {
-	console.log(`${conn.socket.remoteAddress}:${conn.socket.remotePort} (${conn.nick}) ... ${msg}`);
+// ---------------------------------------------
+
+function is_alphanumeric(str) {
+	let code, i, len;
+
+	for (i = 0, len = str.length; i < len; i++) {
+		code = str.charCodeAt(i);
+		if ((code > 47 && code < 58) || (code > 64 && code < 91) || (code > 96 && code < 123)) {
+			return true;
+		}
+	}
+	return false;	// returns false on empty string
+};
+
+function nick_is_legal(str) {
+	return str.length > 0 && is_alphanumeric(str);
 }
 
+function user_is_legal(str) {
+	return str.length > 0 && is_alphanumeric(str);
+}
+
+function chan_is_legal(str) {
+	if (str.charAt(0) !== "#") {
+		return false;
+	}
+	if (str.length > 1 && is_alphanumeric(str.slice(1))) {
+		return true;
+	}
+	return false;
+}
+
+// ---------------------------------------------
+
+function make_irc_server() {
+
+	// Use Object.create(null) when using an object as a map
+	// to avoid issued with prototypes.
+
+	let irc = {
+		nicks: Object.create(null),
+		channels: Object.create(null),
+	}
+
+	irc.nick_in_use = (nick) => {
+		if (irc.nicks[nick]) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	irc.remove_conn = (conn) => {
+		delete irc.nicks[conn.nick];
+	}
+
+	irc.add_conn = (conn) => {
+		irc.nicks[conn.nick] = conn;
+	}
+
+	irc.get_channel = (chan_name) => {
+		return irc.channels[chan_name];		// Can return undefined
+	}
+
+	irc.get_or_make_channel = (chan_name) => {
+		if (irc.channels[chan_name] === undefined) {
+			irc.channels[chan_name] = make_channel(chan_name);
+		}
+		return irc.channels[chan_name];
+	}
+
+	return irc;
+}
+
+// ---------------------------------------------
+
+function make_channel(chan_name) {
+
+	let channel = {
+		connections: Object.create(null),
+	}
+
+	channel.remove_conn = (conn) => {
+		channel.raw_send_all(`${conn.id()} PART ${chan_name}`);
+		delete channel.connections[conn.nick];
+	}
+
+	channel.add_conn = (conn) => {
+		channel.connections[conn.nick] = conn;
+		channel.raw_send_all(`${conn.id()} JOIN ${chan_name}`);
+	}
+
+	channel.raw_send_all = (msg) => {
+		for (let nick of Object.keys(channel.connections)) {
+			let conn = channel.connections[nick];
+			conn.write(msg + "\r\n");
+		}
+	}
+
+	channel.normal_message = (conn, msg) => {
+
+		if (msg.charAt(0) !== ":") {
+			msg = ":" + msg;
+		}
+
+		if (msg.length < 2) {
+			return;
+		}
+
+		for (let nick of Object.keys(channel.connections)) {
+			if (nick !== conn.nick) {
+				let out_conn = channel.connections[nick];
+				out_conn.write(`${conn.id()} PRIVMSG ${chan_name} ${msg}\r\n`);
+			}
+		}
+	}
+
+	channel.name_reply = (conn) => {
+		conn.numeric(353, `= ${chan_name} :` + Object.keys(channel.connections).join(" "));
+		conn.numeric(366, `${chan_name} :End of NAMES list`);
+	}
+
+	return channel;
+}
+
+// ---------------------------------------------
 
 function new_connection(socket) {
 
@@ -19,210 +143,179 @@ function new_connection(socket) {
 		nick: undefined,
 		user: undefined,
 		socket : socket,
-		channels : {},			// e.g. "#starwars" -> true
-	}
-
-	log(conn, "CONNECTED");
-
-	function handle_line(data) {
-
-		let tokens = data.toString().split(" ");
-
-		if (tokens[0] === "NICK") {
-			if (tokens[1]) {
-				irc.set_nick(conn, tokens[1]);
-			}
-		}
-
-		if (tokens[0] === "USER") {
-			if (tokens[1]) {
-				irc.set_user(conn, tokens[1]);
-			}
-		}
-
-		if (tokens[0] === "JOIN") {
-			if (tokens[1]) {
-				irc.join_channel(conn, tokens[1]);
-			}
-		}
-
-		if (tokens[0] === "PART") {
-			if (tokens[1]) {
-				irc.leave_channel(conn, tokens[1]);
-			}
-		}
-
-		if (tokens[0] === "PRIVMSG") {
-			if (tokens[1]) {
-				if (conn.channels[tokens[1]]) {
-					irc.msg_to_channel(conn, tokens[1], tokens.slice(2).join(" "));
-				}
-			}
-		}
+		channels : Object.create(null),		// Use Object.create(null) when using an object as a map
 	}
 
 	socket.on("data", (data) => {
 		let lines = data.toString().split("\n");
 		for (let line of lines) {
-			handle_line(line);
+			conn.handle_line(line);
 		}
 	});
 
 	socket.on("close", () => {
-		irc.delete_client(conn);
-		log(conn, "CONNECTION CLOSED");
+		conn.close();
 	});
 
-	socket.on("error", () => {
-		log(conn, "ERROR");
-	});
-}
+	socket.on("error", () => {});
 
+	conn.close = () => {
+		for (let chan_name of Object.keys(conn.channels)) {
+			let channel = conn.channels[chan_name];
+			channel.remove_conn(conn);
+		}
+		irc.remove_conn(conn);
+	}
 
-function new_channel(chan_name) {
+	conn.write = (msg) => {
+		conn.socket.write(msg);
+	}
 
-	let channel = {
-		users: {},			// nick --> conn object
+	conn.numeric = (n, msg) => {
+
+		n = n.toString();
+
+		while (n.length < 3) {
+			n = "0" + n;
+		}
+
+		let username = conn.nick || "*";
+
+		conn.write(`:${SERVER} ${n} ${username} ${msg}\r\n`);
+	}
+
+	conn.id = () => {
+		return `:${conn.nick}!${conn.user}@${conn.socket.remoteAddress}`
 	};
 
-	channel.add_user = (conn) => {
-
-		if (conn && conn.nick) {
-
-			channel.users[conn.nick] = conn;
-			conn.channels[chan_name] = true;
-
-			channel.msg(conn, "JOIN", chan_name);
+	conn.join = (chan_name) => {
+		if (chan_is_legal(chan_name)) {
+			if (conn.channels[chan_name] === undefined) {
+				let channel = irc.get_or_make_channel(chan_name);
+				channel.add_conn(conn);
+				conn.channels[chan_name] = channel;
+				channel.name_reply(conn);
+			}
 		}
-	}
+	};
 
-	channel.delete_user = (conn) => {
-
-		if (conn && conn.nick) {
-
-			channel.msg(conn, "PART", chan_name);
-
-			delete channel.users[conn.nick];
-			delete conn.channels[chan_name];
+	conn.part = (chan_name) => {
+		if (chan_is_legal(chan_name)) {
+			if (conn.channels[chan_name] !== undefined) {
+				let channel = irc.get_channel(chan_name);
+				if (channel) {
+					channel.remove_conn(conn);
+				}
+				delete conn.channels[chan_name];
+			}
 		}
-	}
+	};
 
-	channel.msg = (conn, type, msg, suppress_to_source) => {
+	conn.handle_line = (msg) => {
 
-		let s = `:${conn.nick}!${conn.user}@${conn.socket.remoteAddress} ${type} ${msg}\r\n\r\n`
+		console.log(conn.id() + " ... " + msg);
 
-		if (conn && conn.nick && channel.users[conn.nick] && conn.channels[chan_name]) {
-			for (let nick of Object.keys(channel.users)) {
-				let out_conn = channel.users[nick];
-				if (!suppress_to_source || out_conn !== conn) {
-					out_conn.socket.write(s);
+		let tokens = msg.split(" ");
+
+		// ----------------------------------------------------------- LENGTH 2 -----------------------------------------------------------
+
+		if (tokens.length < 2) {
+			return;
+		}
+
+		if (tokens[0] === "NICK") {
+
+			let had_nick_already = (conn.nick !== undefined);
+
+			if (nick_is_legal(tokens[1])) {
+
+				if (irc.nick_in_use(tokens[1]) === false) {
+
+					console.log(`${conn.id()} set nick to ${tokens[1]}`);
+
+					irc.remove_conn(conn);
+					conn.nick = tokens[1];
+					irc.add_conn(conn);
+
+					if (had_nick_already === false && conn.user !== undefined) {		// We just completed registration
+						conn.numeric(1, WELCOME_MSG);
+					}
+
+				} else {
+					conn.numeric(433, ":Nickname is already in use");
+				}
+			}
+		}
+
+		if (tokens[0] === "USER") {
+			if (user_is_legal(tokens[1])) {
+				if (conn.user === undefined) {
+					console.log(`${conn.id()} set username to ${tokens[1]}`);
+					conn.user = tokens[1];
+					if (conn.nick !== undefined) {										// We just completed registration
+						conn.numeric(1, WELCOME_MSG);
+					}
+				}
+			}
+		}
+
+		// ----------------------------------------------------------- REG-CHECK ----------------------------------------------------------
+
+		if (conn.nick === undefined || conn.user === undefined) {
+			return;
+		}
+
+		if (tokens[0] === "JOIN") {
+
+			let chan_name = tokens[1];
+			if (chan_name.charAt(0) !== "#") {
+				chan_name = "#" + chan_name;
+			}
+
+			if (chan_is_legal(chan_name)) {
+				conn.join(chan_name);
+			}
+		}
+
+		if (tokens[0] === "PART") {
+
+			let chan_name = tokens[1];
+			if (chan_name.charAt(0) !== "#") {
+				chan_name = "#" + chan_name;
+			}
+
+			if (chan_is_legal(chan_name)) {
+				conn.part(chan_name);
+			}
+		}
+
+		// ----------------------------------------------------------- LENGTH 3 -----------------------------------------------------------
+
+		if (tokens.length < 3) {
+			return;
+		}
+
+		if (tokens[0] === "PRIVMSG") {		// FIXME: allow whispers
+
+			let chan_name = tokens[1];
+			if (chan_name.charAt(0) !== "#") {
+				chan_name = "#" + chan_name;
+			}
+
+			let msg = tokens.slice(2).join(" ");
+
+			if (chan_is_legal(chan_name)) {
+				if (conn.channels[chan_name] !== undefined) {
+					let channel = conn.channels[chan_name];
+					channel.normal_message(conn, msg);
 				}
 			}
 		}
 	};
-
-	return channel;
 }
 
+// ---------------------------------------------
 
-function make_irc() {
-
-	let irc = {};
-
-	irc.all_clients = {};		// nick			-->		conn object
-	irc.all_channels = {};		// chan_name	-->		channel object
-
-	irc.new_connection = (socket) => {
-		new_connection(socket);
-	};
-
-	irc.startup = () => {
-		irc.server = net.createServer(irc.new_connection)
-		irc.server.listen(PORT, SERVER);
-		console.log(`IRC startup on ${SERVER}:${PORT}`);
-	};
-
-	irc.set_nick = (conn, new_nick) => {
-		if (irc.all_clients[new_nick] === undefined) {
-			irc.all_clients[new_nick] = conn;
-			conn.nick = new_nick;
-		}
-	};
-
-	irc.set_user = (conn, new_user) => {
-		if (conn && new_user) {
-			conn.user = new_user;
-		}
-	};
-
-	irc.delete_client = (conn) => {
-		if (conn && conn.nick) {
-			delete irc.all_clients[conn.nick];
-			for (let chan_name of Object.keys(conn.channels)) {
-				irc.leave_channel(conn, chan_name);
-			}
-		}
-	};
-
-	irc.join_channel = (conn, chan_name) => {
-
-		if (conn && conn.nick && chan_name) {
-
-			if (chan_name.charAt(0) !== "#") {
-				chan_name = "#" + chan_name;
-			}
-
-			if (irc.all_channels[chan_name] === undefined) {
-				irc.all_channels[chan_name] = new_channel(chan_name)
-			}
-
-			irc.all_channels[chan_name].add_user(conn);
-			log(conn, `joining ${chan_name}`);
-		}
-	};
-
-	irc.leave_channel = (conn, chan_name) => {
-
-		if (conn && conn.nick && chan_name) {
-
-			if (chan_name.charAt(0) !== "#") {
-				chan_name = "#" + chan_name;
-			}
-
-			if (irc.all_channels[chan_name] === undefined) {
-				return
-			}
-
-			irc.all_channels[chan_name].delete_user(conn);
-			log(conn, `leaving ${chan_name}`);
-
-			if (Object.keys(irc.all_channels[chan_name].users).length === 0) {
-				delete irc.all_channels[chan_name];
-				console.log(`Closed channel ${chan_name}`);
-			}
-		}
-	};
-
-	irc.msg_to_channel = (conn, chan_name, msg) => {
-
-		if (conn && conn.nick && chan_name && msg) {
-
-			if (chan_name.charAt(0) !== "#") {
-				chan_name = "#" + chan_name;
-			}
-
-			if (msg.charAt(0) != ":") {
-				msg = ":" + msg;
-			}
-
-			let chan = irc.all_channels[chan_name];
-			chan.msg(conn, "PRIVMSG", `${chan_name} ${msg}`, true);
-		}
-	};
-
-	return irc;
-};
-
-
-let irc = make_irc();
-irc.startup();
+let irc = make_irc_server();
+let server = net.createServer(new_connection);
+server.listen(PORT, SERVER);
