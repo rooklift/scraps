@@ -8,7 +8,7 @@ const net = require("net");
 const SERVER = "127.0.0.1";
 const PORT = 6667;
 
-const WELCOME_MSG = ":Welcome to the server!"
+const WELCOME_MSG = ":Welcome to the server!";
 
 // ---------------------------------------------
 
@@ -24,7 +24,7 @@ function is_alphanumeric(str) {
 		}
 	}
 	return true;	// returns true on empty string
-};
+}
 
 function nick_is_legal(str) {
 	return str.length > 0 && is_alphanumeric(str);
@@ -54,7 +54,7 @@ function make_irc_server() {
 	let irc = {
 		nicks: Object.create(null),
 		channels: Object.create(null),
-	}
+	};
 
 	irc.nick_in_use = (nick) => {
 		if (irc.nicks[nick]) {
@@ -62,26 +62,26 @@ function make_irc_server() {
 		} else {
 			return false;
 		}
-	}
+	};
 
 	irc.remove_conn = (conn) => {
 		delete irc.nicks[conn.nick];
-	}
+	};
 
 	irc.add_conn = (conn) => {
 		irc.nicks[conn.nick] = conn;
-	}
+	};
 
 	irc.get_channel = (chan_name) => {
 		return irc.channels[chan_name];		// Can return undefined
-	}
+	};
 
 	irc.get_or_make_channel = (chan_name) => {
 		if (irc.channels[chan_name] === undefined) {
 			irc.channels[chan_name] = make_channel(chan_name);
 		}
 		return irc.channels[chan_name];
-	}
+	};
 
 	return irc;
 }
@@ -92,24 +92,24 @@ function make_channel(chan_name) {
 
 	let channel = {
 		connections: Object.create(null),
-	}
+	};
 
 	channel.remove_conn = (conn) => {
 		channel.raw_send_all(`${conn.id()} PART ${chan_name}`);
 		delete channel.connections[conn.nick];
-	}
+	};
 
 	channel.add_conn = (conn) => {
 		channel.connections[conn.nick] = conn;
 		channel.raw_send_all(`${conn.id()} JOIN ${chan_name}`);
-	}
+	};
 
 	channel.raw_send_all = (msg) => {
 		for (let nick of Object.keys(channel.connections)) {
 			let conn = channel.connections[nick];
 			conn.write(msg + "\r\n");
 		}
-	}
+	};
 
 	channel.normal_message = (conn, msg) => {
 
@@ -127,12 +127,12 @@ function make_channel(chan_name) {
 				out_conn.write(`${conn.id()} PRIVMSG ${chan_name} ${msg}\r\n`);
 			}
 		}
-	}
+	};
 
 	channel.name_reply = (conn) => {
 		conn.numeric(353, `= ${chan_name} :` + Object.keys(channel.connections).join(" "));
 		conn.numeric(366, `${chan_name} :End of NAMES list`);
-	}
+	};
 
 	return channel;
 }
@@ -146,7 +146,7 @@ function new_connection(socket) {
 		user: undefined,
 		socket : socket,
 		channels : Object.create(null),		// Use Object.create(null) when using an object as a map
-	}
+	};
 
 	socket.on("data", (data) => {
 		let lines = data.toString().split("\n");
@@ -163,15 +163,13 @@ function new_connection(socket) {
 
 	conn.close = () => {
 		for (let chan_name of Object.keys(conn.channels)) {
-			let channel = conn.channels[chan_name];
-			channel.remove_conn(conn);
+			conn.part(chan_name);
 		}
-		irc.remove_conn(conn);
-	}
+	};
 
 	conn.write = (msg) => {
 		conn.socket.write(msg);
-	}
+	};
 
 	conn.numeric = (n, msg) => {
 
@@ -184,10 +182,10 @@ function new_connection(socket) {
 		let username = conn.nick || "*";
 
 		conn.write(`:${SERVER} ${n} ${username} ${msg}\r\n`);
-	}
+	};
 
 	conn.id = () => {
-		return `:${conn.nick}!${conn.user}@${conn.socket.remoteAddress}`
+		return `:${conn.nick}!${conn.user}@${conn.socket.remoteAddress}`;
 	};
 
 	conn.join = (chan_name) => {
@@ -203,11 +201,9 @@ function new_connection(socket) {
 
 	conn.part = (chan_name) => {
 		if (chan_is_legal(chan_name)) {
-			if (conn.channels[chan_name] !== undefined) {
-				let channel = irc.get_channel(chan_name);
-				if (channel) {
-					channel.remove_conn(conn);
-				}
+			let channel = conn.channels[chan_name];
+			if (channel) {
+				channel.remove_conn(conn);
 				delete conn.channels[chan_name];
 			}
 		}
@@ -309,8 +305,8 @@ function new_connection(socket) {
 			let msg = tokens.slice(2).join(" ");
 
 			if (chan_is_legal(chan_name)) {
-				if (conn.channels[chan_name] !== undefined) {
-					let channel = conn.channels[chan_name];
+				let channel = conn.channels[chan_name];
+				if (channel) {
 					channel.normal_message(conn, msg);
 				}
 			}
