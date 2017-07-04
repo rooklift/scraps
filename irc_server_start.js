@@ -51,6 +51,13 @@ function chan_is_legal(str) {
 	return false;
 }
 
+function ensure_leading_hash(str) {
+	if (str.charAt(0) !== "#") {
+		str = "#" + str;
+	}
+	return str;
+}
+
 // ---------------------------------------------------------------------------------------------------
 
 function make_irc_server() {
@@ -286,7 +293,7 @@ handlers.handle_NICK = (conn, msg, tokens) => {
 	if (had_nick_already === false && conn.user !== undefined) {		// We just completed registration
 		conn.numeric(1, WELCOME_MSG);
 	}
-}
+};
 
 handlers.handle_USER = (conn, msg, tokens) => {
 
@@ -303,11 +310,13 @@ handlers.handle_USER = (conn, msg, tokens) => {
 	}
 
 	console.log(`${conn.id()} set username to ${tokens[1]}`);
+
 	conn.user = tokens[1];
+
 	if (conn.nick !== undefined) {										// We just completed registration
 		conn.numeric(1, WELCOME_MSG);
 	}
-}
+};
 
 handlers.handle_JOIN = (conn, msg, tokens) => {
 
@@ -315,15 +324,14 @@ handlers.handle_JOIN = (conn, msg, tokens) => {
 		return;
 	}
 
-	let chan_name = tokens[1];
-	if (chan_name.charAt(0) !== "#") {
-		chan_name = "#" + chan_name;
+	let chan_name = ensure_leading_hash(tokens[1]);
+
+	if (chan_is_legal(chan_name) === false) {
+		return;
 	}
 
-	if (chan_is_legal(chan_name)) {
-		conn.join(chan_name);
-	}
-}
+	conn.join(chan_name);
+};
 
 handlers.handle_PART = (conn, msg, tokens) => {
 
@@ -331,15 +339,14 @@ handlers.handle_PART = (conn, msg, tokens) => {
 		return;
 	}
 
-	let chan_name = tokens[1];
-	if (chan_name.charAt(0) !== "#") {
-		chan_name = "#" + chan_name;
+	let chan_name = ensure_leading_hash(tokens[1]);
+
+	if (chan_is_legal(chan_name) === false) {
+		return;
 	}
 
-	if (chan_is_legal(chan_name)) {
-		conn.part(chan_name);
-	}
-}
+	conn.part(chan_name);
+};
 
 handlers.handle_PRIVMSG = (conn, msg, tokens) => {
 
@@ -347,22 +354,21 @@ handlers.handle_PRIVMSG = (conn, msg, tokens) => {
 		return;
 	}
 
-	let chan_name = tokens[1];
-	if (chan_name.charAt(0) !== "#") {
-		chan_name = "#" + chan_name;
-	}
-
-	let s = tokens.slice(2).join(" ");
+	let chan_name = ensure_leading_hash(tokens[1]);
 
 	if (chan_is_legal(chan_name) === false) {
 		return;
 	}
 
 	let channel = conn.channels[chan_name];
-	if (channel) {
-		channel.normal_message(conn, s);
+
+	if (channel === undefined) {
+		return;
 	}
-}
+
+	let s = tokens.slice(2).join(" ");
+	channel.normal_message(conn, s);
+};
 
 // ---------------------------------------------------------------------------------------------------
 
