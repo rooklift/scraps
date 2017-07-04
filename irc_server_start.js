@@ -136,10 +136,13 @@ function make_channel(chan_name) {
 		}
 
 		for (let nick of Object.keys(channel.connections)) {
-			if (nick !== conn.nick) {
-				let out_conn = channel.connections[nick];
-				out_conn.write(`${conn.id()} PRIVMSG ${chan_name} ${msg}\r\n`);
+
+			if (nick === conn.nick) {		// Don't send back messages to the source of them
+				continue;
 			}
+
+			let out_conn = channel.connections[nick];
+			out_conn.write(`${conn.id()} PRIVMSG ${chan_name} ${msg}\r\n`);
 		}
 	};
 
@@ -252,10 +255,7 @@ function new_connection(socket) {
 
 		let handler = handlers["handle_" + tokens[0]];
 
-		console.log(handler);
-
 		if (typeof(handler) === "function") {
-			console.log("yes");
 			handler(conn, msg, tokens);
 		}
 	};
@@ -284,8 +284,6 @@ handlers.handle_NICK = (conn, msg, tokens) => {
 
 	let had_nick_already = (conn.nick !== undefined);
 
-	console.log(`${conn.id()} set nick to ${tokens[1]}`);
-
 	irc.remove_conn(conn);
 	conn.nick = tokens[1];
 	irc.add_conn(conn);
@@ -308,8 +306,6 @@ handlers.handle_USER = (conn, msg, tokens) => {
 	if (conn.user !== undefined) {										// Can't change user after it's set
 		return;
 	}
-
-	console.log(`${conn.id()} set username to ${tokens[1]}`);
 
 	conn.user = tokens[1];
 
