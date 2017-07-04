@@ -10,7 +10,7 @@ const PORT = 6667;
 
 const WELCOME_MSG = ":Welcome to the server!";
 
-// ---------------------------------------------
+// ---------------------------------------------------------------------------------------------------
 
 function is_alphanumeric(str) {
 	let code, i, len;
@@ -44,7 +44,7 @@ function chan_is_legal(str) {
 	return false;
 }
 
-// ---------------------------------------------
+// ---------------------------------------------------------------------------------------------------
 
 function make_irc_server() {
 
@@ -86,7 +86,7 @@ function make_irc_server() {
 	return irc;
 }
 
-// ---------------------------------------------
+// ---------------------------------------------------------------------------------------------------
 
 function make_channel(chan_name) {
 
@@ -137,7 +137,7 @@ function make_channel(chan_name) {
 	return channel;
 }
 
-// ---------------------------------------------
+// ---------------------------------------------------------------------------------------------------
 
 function new_connection(socket) {
 
@@ -211,110 +211,133 @@ function new_connection(socket) {
 
 	conn.handle_line = (msg) => {
 
+		let handlers = {
+			NICK: handle_NICK,
+			USER: handle_USER,
+			JOIN: handle_JOIN,
+			PART: handle_PART,
+			PRIVMSG: handle_PRIVMSG,
+		};
+
 		console.log(conn.id() + " ... " + msg);
 
 		let tokens = msg.split(" ");
 
-		// ----------------------------------------------------------- LENGTH 2 -----------------------------------------------------------
+		// Ignore lines if we haven't finished registration...
 
-		if (tokens.length < 2) {
+		if (tokens[0] !== "NICK" && tokens[0] !== "USER" && (conn.nick === undefined || conn.user === undefined)) {
 			return;
 		}
 
-		if (tokens[0] === "NICK") {
-
-			let had_nick_already = (conn.nick !== undefined);
-
-			if (nick_is_legal(tokens[1])) {
-
-				if (irc.nick_in_use(tokens[1]) === false) {
-
-					console.log(`${conn.id()} set nick to ${tokens[1]}`);
-
-					irc.remove_conn(conn);
-					conn.nick = tokens[1];
-					irc.add_conn(conn);
-
-					if (had_nick_already === false && conn.user !== undefined) {		// We just completed registration
-						conn.numeric(1, WELCOME_MSG);
-					}
-
-				} else {
-					conn.numeric(433, ":Nickname is already in use");
-				}
-			} else {
-				conn.numeric(432, ":Erroneus nickname");
-			}
-		}
-
-		if (tokens[0] === "USER") {
-			if (user_is_legal(tokens[1])) {
-				if (conn.user === undefined) {
-					console.log(`${conn.id()} set username to ${tokens[1]}`);
-					conn.user = tokens[1];
-					if (conn.nick !== undefined) {										// We just completed registration
-						conn.numeric(1, WELCOME_MSG);
-					}
-				}
-			}
-		}
-
-		// ----------------------------------------------------------- REG-CHECK ----------------------------------------------------------
-
-		if (conn.nick === undefined || conn.user === undefined) {
-			return;
-		}
-
-		if (tokens[0] === "JOIN") {
-
-			let chan_name = tokens[1];
-			if (chan_name.charAt(0) !== "#") {
-				chan_name = "#" + chan_name;
-			}
-
-			if (chan_is_legal(chan_name)) {
-				conn.join(chan_name);
-			}
-		}
-
-		if (tokens[0] === "PART") {
-
-			let chan_name = tokens[1];
-			if (chan_name.charAt(0) !== "#") {
-				chan_name = "#" + chan_name;
-			}
-
-			if (chan_is_legal(chan_name)) {
-				conn.part(chan_name);
-			}
-		}
-
-		// ----------------------------------------------------------- LENGTH 3 -----------------------------------------------------------
-
-		if (tokens.length < 3) {
-			return;
-		}
-
-		if (tokens[0] === "PRIVMSG") {		// FIXME: allow whispers
-
-			let chan_name = tokens[1];
-			if (chan_name.charAt(0) !== "#") {
-				chan_name = "#" + chan_name;
-			}
-
-			let msg = tokens.slice(2).join(" ");
-
-			if (chan_is_legal(chan_name)) {
-				let channel = conn.channels[chan_name];
-				if (channel) {
-					channel.normal_message(conn, msg);
-				}
-			}
+		if (handlers[tokens[0]]) {
+			handlers[tokens[0]](conn, msg, tokens);
 		}
 	};
 }
 
-// ---------------------------------------------
+// ---------------------------------------------------------------------------------------------------
+
+function handle_NICK(conn, msg, tokens) {
+
+	if (tokens.length < 2) {
+		return;
+	}
+
+	let had_nick_already = (conn.nick !== undefined);
+
+	if (nick_is_legal(tokens[1])) {
+
+		if (irc.nick_in_use(tokens[1]) === false) {
+
+			console.log(`${conn.id()} set nick to ${tokens[1]}`);
+
+			irc.remove_conn(conn);
+			conn.nick = tokens[1];
+			irc.add_conn(conn);
+
+			if (had_nick_already === false && conn.user !== undefined) {		// We just completed registration
+				conn.numeric(1, WELCOME_MSG);
+			}
+
+		} else {
+			conn.numeric(433, ":Nickname is already in use");
+		}
+	} else {
+		conn.numeric(432, ":Erroneus nickname");
+	}
+}
+
+function handle_USER(conn, msg, tokens) {
+
+	if (tokens.length < 2) {
+		return;
+	}
+
+	if (user_is_legal(tokens[1])) {
+		if (conn.user === undefined) {
+			console.log(`${conn.id()} set username to ${tokens[1]}`);
+			conn.user = tokens[1];
+			if (conn.nick !== undefined) {										// We just completed registration
+				conn.numeric(1, WELCOME_MSG);
+			}
+		}
+	}
+}
+
+function handle_JOIN(conn, msg, tokens) {
+
+	if (tokens.length < 2) {
+		return;
+	}
+
+	let chan_name = tokens[1];
+	if (chan_name.charAt(0) !== "#") {
+		chan_name = "#" + chan_name;
+	}
+
+	if (chan_is_legal(chan_name)) {
+		conn.join(chan_name);
+	}
+}
+
+function handle_PART(conn, msg, tokens) {
+
+	if (tokens.length < 2) {
+		return;
+	}
+
+	let chan_name = tokens[1];
+	if (chan_name.charAt(0) !== "#") {
+		chan_name = "#" + chan_name;
+	}
+
+	if (chan_is_legal(chan_name)) {
+		conn.part(chan_name);
+	}
+}
+
+function handle_PRIVMSG(conn, msg, tokens) {
+
+	if (tokens.length < 3) {
+		return;
+	}
+
+	let chan_name = tokens[1];
+	if (chan_name.charAt(0) !== "#") {
+		chan_name = "#" + chan_name;
+	}
+
+	let s = tokens.slice(2).join(" ");
+
+	if (chan_is_legal(chan_name)) {
+		let channel = conn.channels[chan_name];
+		if (channel) {
+			channel.normal_message(conn, s);
+		}
+	}
+}
+
+// ---------------------------------------------------------------------------------------------------
 
 let irc = make_irc_server();
 let server = net.createServer(new_connection);
