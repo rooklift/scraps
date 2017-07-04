@@ -158,12 +158,7 @@ function make_channel(chan_name) {
 
 function new_connection(socket) {
 
-	let conn = {
-		nick: undefined,
-		user: undefined,
-		socket : socket,
-		channels : Object.create(null),		// Use Object.create(null) when using an object as a map
-	};
+	// Setup socket actions...
 
 	socket.on("data", (data) => {
 		let lines = data.toString().split("\n");
@@ -177,6 +172,15 @@ function new_connection(socket) {
 	});
 
 	socket.on("error", () => {});
+
+	// Setup the conn object...
+
+	let conn = {
+		nick: undefined,
+		user: undefined,
+		socket : socket,
+		channels : Object.create(null),		// Use Object.create(null) when using an object as a map
+	};
 
 	conn.close = () => {
 		for (let chan_name of Object.keys(conn.channels)) {
