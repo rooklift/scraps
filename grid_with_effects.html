@@ -1,0 +1,269 @@
+<html>
+<head><title></title>
+<style>
+	body {
+		margin: 0;
+		background-color: black;
+		font-family: "Courier";
+	}
+	table {
+		border-collapse: collapse;
+		table-layout: fixed;
+	}
+	td {
+		text-align: center;
+		color: white;
+		padding: 0;
+		cursor: default;
+	}
+	td:hover {
+		color: white !important;
+	}
+	.overlay {
+		pointer-events: none;
+		background: none !important;
+	}
+</style>
+</head>
+<body>
+
+<div id="maintable" style="position: absolute;"></div>
+<canvas id="canvas" class="overlay" style="position: absolute;"></canvas>
+
+<script>
+	"use strict";
+
+	const alert = require("../electronbridge_js/alert");
+	const child_process = require("child_process");
+	const fs = require("fs");
+	const ipcRenderer = require("electron").ipcRenderer;
+	const readline = require("readline");
+
+	// --------------------------------------------------------------
+
+	const colour_dict = JSON.parse(fs.readFileSync("colours.json"));
+
+	// --------------------------------------------------------------
+
+	function id_from_xy(x, y) {
+		return `td_${x}_${y}`;
+	}
+
+	function pixels_from_x1y1x2y2(x1, y1, x2, y2) {
+		let xpixel1 = Math.floor(x1 * renderer.boxwidth + renderer.boxwidth / 2)
+		let ypixel1 = Math.floor(y1 * renderer.boxheight + renderer.boxwidth / 2)
+		let xpixel2 = Math.floor(x2 * renderer.boxwidth + renderer.boxwidth / 2)
+		let ypixel2 = Math.floor(y2 * renderer.boxheight + renderer.boxwidth / 2)
+		return [xpixel1, ypixel1, xpixel2, ypixel2]
+	}
+
+	// --------------------------------------------------------------
+
+	function make_renderer() {
+
+		let renderer = {
+			ready_to_flip: false,
+			postponed_actions: [],
+		};
+
+		renderer.init = (opts) => {
+
+			renderer.width = opts.width;
+			renderer.height = opts.height;
+			renderer.boxwidth = opts.boxwidth;
+			renderer.boxheight = opts.boxheight;
+			renderer.uid = opts.uid;
+			renderer.canvas = document.querySelector("canvas");
+			renderer.virtue = canvas.getContext("2d");
+
+			// Make the table...
+
+			let html = `<table style="font-size: ${opts.fontpercent}%;">`;
+
+			for (let y = 0; y < opts.height; y++) {
+				html += "<tr>";
+				for (let x = 0; x < opts.width; x++) {
+					let id = id_from_xy(x, y);
+					html += `<td><div id="${id}" style="width: ${opts.boxwidth}; height: ${opts.boxheight}; overflow: hidden;"></div></td>`;
+				}
+				html += "</tr>"
+			}
+
+			html += "</table>"
+
+			document.getElementById("maintable").innerHTML = html;
+
+			// Although the window is probably already the correct size, do this anyway...
+			// (Anyway, this now sets the canvas to be the right size if it wasn't already.)
+
+			renderer.resize(opts.width * opts.boxwidth, opts.height * opts.boxheight);
+
+			// Set the "ready" flag and then deal with any postponed items that were queued
+			// due to us not being ready earlier...
+
+			renderer.ready_to_flip = true;
+
+			for (let n = 0; n < renderer.postponed_actions.length; n++) {
+				renderer.postponed_actions[n]();
+			}
+			renderer.postponed_actions = [];
+
+			// Input handlers...
+
+			document.addEventListener("keydown", (evt) => {
+				ipcRenderer.send("keydown", {key: evt.key});
+			});
+
+			document.addEventListener("keyup", (evt) => {
+				ipcRenderer.send("keyup", {key: evt.key});
+			});
+
+			for (let x = 0; x < renderer.width; x++) {
+				for (let y = 0; y < renderer.height; y++) {
+					let id = id_from_xy(x, y);
+					let element = document.getElementById(id)
+					element.addEventListener("mousedown", (evt) => {
+						evt.preventDefault();								// Prevent selecting text with the mouse
+						ipcRenderer.send("mousedown", {x: x, y: y});		// x and y work despite closures because we use "let" in the loops
+					});
+					element.addEventListener("mouseup", (evt) => {
+						ipcRenderer.send("mouseup", {x: x, y: y});			// Works despite closures because we use "let" in the loops
+					});
+				}
+			}
+		};
+
+		renderer.flip = (opts) => {
+
+			if (renderer.ready_to_flip !== true) {
+				renderer.postponed_actions.push(() => renderer.flip(opts));
+				return;
+			}
+
+			let charstring = opts.chars;
+			let colourstring = opts.colours;
+			let highlight = opts.highlight;
+
+			for (let x = 0; x < renderer.width; x++) {
+				for (let y = 0; y < renderer.height; y++) {
+					let index = y * renderer.width + x;
+					let id = id_from_xy(x, y);
+					let element = document.getElementById(id);
+					if (element) {
+						element.innerHTML = charstring.charAt(index);
+						let colour_key = colourstring.charAt(index);
+						let colour = colour_dict[colour_key];
+						if (colour) {
+							element.style["color"] = colour;
+						}
+						if (x === highlight.x && y === highlight.y) {
+							element.style["background-color"] = "#494949";
+						} else {
+							element.style["background-color"] = "#000000";
+						}
+					}
+				}
+			}
+		};
+
+		renderer.finish_effect_after = (t, opts) => {
+			setTimeout(() => renderer.finish_effect(opts), t);
+		};
+
+		renderer.finish_effect = (opts) => {
+			renderer.virtue.clearRect(0, 0, canvas.width, canvas.height);
+			ipcRenderer.send("effect_done", {effectid: opts.effectid});
+		};
+
+		renderer.special = (opts) => {
+			if (opts.effect == "laser") {
+				renderer.laser(opts);
+			}
+			if (opts.effect == "shot") {
+				renderer.shot(opts);
+			}
+		};
+
+		renderer.laser = (opts) => {
+			let [xpixel1, ypixel1, xpixel2, ypixel2] = pixels_from_x1y1x2y2(opts.args[0], opts.args[1], opts.args[2], opts.args[3]);
+
+			renderer.virtue.strokeStyle = "#ffff00";
+			renderer.virtue.lineWidth = 2;
+
+			renderer.virtue.beginPath();
+			renderer.virtue.moveTo(xpixel1, ypixel1);
+			renderer.virtue.lineTo(xpixel2, ypixel2);
+			renderer.virtue.stroke();
+
+			renderer.finish_effect_after(200, opts);
+		};
+
+		renderer.shot = (opts) => {
+
+			let [xpixel1, ypixel1, xpixel2, ypixel2] = pixels_from_x1y1x2y2(opts.args[0], opts.args[1], opts.args[2], opts.args[3]);
+
+			let blob = {tick: 0, x: xpixel1, y: ypixel1, speedx: (xpixel2 - xpixel1) / 32, speedy: (ypixel2 - ypixel1) / 32};
+
+			blob.move = () => {
+				blob.x += blob.speedx;
+				blob.y += blob.speedy;
+				blob.tick++;
+			};
+
+			blob.draw = () => {
+				renderer.virtue.clearRect(0, 0, canvas.width, canvas.height);
+				renderer.virtue.fillStyle = "cyan";
+				renderer.virtue.fillRect(blob.x, blob.y, 6, 6);
+			};
+
+			blob.frame = () => {
+				blob.move()
+				blob.draw()
+				if (blob.tick < 32) {
+					requestAnimationFrame(blob.frame);
+				} else {
+					requestAnimationFrame(() => renderer.finish_effect(opts));
+				}
+			};
+
+			blob.frame()
+		};
+
+		renderer.resize = (xpixels, ypixels) => {
+			let msg = {
+				xpixels: xpixels,
+				ypixels: ypixels,
+			};
+			ipcRenderer.send("request_resize", msg);
+			canvas.width = xpixels;
+			canvas.height = ypixels;
+		};
+
+		return renderer;
+	}
+
+	// --------------------------------------------------------------
+
+	let renderer = make_renderer();
+
+	// --------------------------------------------------------------
+
+	ipcRenderer.on("init", (event, opts) => {
+		renderer.init(opts);
+	});
+
+	ipcRenderer.on("update", (event, opts) => {
+		renderer.flip(opts);
+	});
+
+	ipcRenderer.on("special", (event, opts) => {
+		renderer.special(opts);
+	});
+
+	// --------------------------------------------------------------
+
+	ipcRenderer.send("ready", null);	// triggers an init message to be sent to us
+
+</script>
+</body>
+</html>
