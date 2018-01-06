@@ -1,7 +1,7 @@
 import os, requests, subprocess
 
 LIMIT = 30
-MY_ID = 4355	# Not really...
+MY_ID = 4355	# Not really
 CHLORINE_DIR = "C:\\Users\\Owner\\Desktop\\chlorine"
 
 rank_lookup = {1: "1   ", 2: " 2  ", 3: "  3 ", 4: "   4"}
@@ -42,8 +42,10 @@ class RecentGames:
 
 				usernames = " ".join(usernames_list)
 
-				print("  {0:>2} ({1:>4}s, {2:>3}t,  {3}x{4}) {5} {6}".format(
-					len(self.game_ids) - 1, game["ships_produced"], game["turns_total"], game["map_width"], game["map_height"], my_rank, usernames))
+				challenge_string = "<-- ch" if game["challenge_id"] is not None else ""
+
+				print(" {0:>3} ({1:>4}s, {2:>3}t,  {3}x{4}) {5} {6}   {7}".format(
+					len(self.game_ids) - 1, game["ships_produced"], game["turns_total"], game["map_width"], game["map_height"], my_rank, usernames, challenge_string))
 
 	def get_game_id(self, n):
 
@@ -83,4 +85,3 @@ while 1:
 			output.write(hlt.content)
 
 	load_in_chlorine(os.path.abspath(local_filename))
-
