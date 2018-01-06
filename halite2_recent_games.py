@@ -10,65 +10,66 @@ class RecentGames:
 
 	def __init__(self):
 
+		self.game_ids = []
 		self.reload()
 
 	def reload(self):
 
-		print()
-
-		self.game_ids = []
-
-		recent = requests.get("http://api.halite.io/v1/api/user/{}/match?&order_by=desc,time_played&limit={}".format(MY_ID, LIMIT)).json()
+		recent = reversed(requests.get("http://api.halite.io/v1/api/user/{}/match?&order_by=desc,time_played&limit={}".format(MY_ID, LIMIT)).json())
 
 		for game in recent:
 
-			my_rank = " ?? "
+			if game["game_id"] not in self.game_ids:
 
-			self.game_ids.append(game["game_id"])
+				self.game_ids.append(game["game_id"])
 
-			players_dict = game["players"]
-			players = []
+				my_rank = " ?? "
 
-			for pid, player in players_dict.items():
-				players.append(player)
-				if int(pid) == MY_ID:
-					my_rank = rank_lookup[player["rank"]]
+				players_dict = game["players"]
+				players = []
 
-			players = sorted(players, key = lambda x : x["rank"])
+				for pid, player in players_dict.items():
+					players.append(player)
+					if int(pid) == MY_ID:
+						my_rank = rank_lookup[player["rank"]]
 
-			usernames_list = []
-			for player in players:
-				username = "{0:<16}".format(player["username"])
-				usernames_list.append(username)
+				players = sorted(players, key = lambda x : x["rank"])
 
-			usernames = " ".join(usernames_list)
+				usernames_list = []
+				for player in players:
+					username = "{0:<16}".format(player["username"])
+					usernames_list.append(username)
 
-			print(" {0:>2} ({1:>4}s, {2:>3}t,  {3}x{4}) {5} {6}".format(
-				len(self.game_ids) - 1, game["ships_produced"], game["turns_total"], game["map_width"], game["map_height"], my_rank, usernames))
+				usernames = " ".join(usernames_list)
 
-		print()
+				print("  {0:>2} ({1:>4}s, {2:>3}t,  {3}x{4}) {5} {6}".format(
+					len(self.game_ids) - 1, game["ships_produced"], game["turns_total"], game["map_width"], game["map_height"], my_rank, usernames))
 
 	def get_game_id(self, n):
 
 		return self.game_ids[n]
+
+	def current_len(self):
+
+		return len(self.game_ids)
+
 
 def load_in_chlorine(filename):
 	subprocess.Popen("electron \"{}\" -o \"{}\"".format(CHLORINE_DIR, filename), shell = True)
 
 
 rg = RecentGames()
-print("Enter a number to download and watch...")
 
 while 1:
 
-	s = input()
+	s = input("> ")
 
 	if len(s) > 0 and s in "rR":
 		rg.reload()
 		continue
 
 	n = int(s)
-	if n < 0 or n > LIMIT - 1:
+	if n < 0 or n >= rg.current_len():
 		continue
 
 	game_id = rg.get_game_id(n)
