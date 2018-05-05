@@ -34,9 +34,8 @@ for move in moves:
 	s = string_from_english_string(move[2])
 	output += ";{}[{}]".format(move[1], s)
 output += ")"
-
-node = gofish.parse_sgf(output)
-while len(node.children) > 0:
-	node = node.children[0]
-node.board.dump()
-
+root = gofish.parse_sgf(output)
+node = root.get_end_node()
+print()
+node.showboard()
+print()
