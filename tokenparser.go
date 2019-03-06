@@ -32,7 +32,7 @@ func (self *TokenParser) Int() int {
 func (self *TokenParser) Float() float64 {
 	ret, err := strconv.ParseFloat(self.Str(), 64)
 	if err != nil {
-		panic(fmt.Sprintf("TokenParser.Float(): Atoi failed at token %d: \"%s\"", self.count, self.scanner.Text()))
+		panic(fmt.Sprintf("TokenParser.Float(): ParseFloat failed at token %d: \"%s\"", self.count, self.scanner.Text()))
 	}
 	return ret
 }
