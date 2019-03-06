@@ -1,3 +1,19 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strconv"
+)
+
+// ---------------------------------------
+
+type TokenParser struct {
+	scanner			*bufio.Scanner
+	count			int
+}
+
 func NewTokenParser() *TokenParser {
 	ret := new(TokenParser)
 	ret.scanner = bufio.NewScanner(os.Stdin)
@@ -6,37 +22,41 @@ func NewTokenParser() *TokenParser {
 }
 
 func (self *TokenParser) Int() int {
-	bl := self.scanner.Scan()
-	if bl == false {
-		err := self.scanner.Err()
-		if err != nil {
-			panic(fmt.Sprintf("%v", err))
-		} else {
-			panic(fmt.Sprintf("End of input."))
-		}
-	}
-	ret, err := strconv.Atoi(self.scanner.Text())
+	ret, err := strconv.Atoi(self.Str())
 	if err != nil {
-		panic(fmt.Sprintf("TokenReader.Int(): Atoi failed at token %d: \"%s\"", self.count, self.scanner.Text()))
+		panic(fmt.Sprintf("TokenParser.Int(): Atoi failed at token %d: \"%s\"", self.count, self.scanner.Text()))
 	}
-	self.count++
 	return ret
 }
 
 func (self *TokenParser) Float() float64 {
+	ret, err := strconv.ParseFloat(self.Str(), 64)
+	if err != nil {
+		panic(fmt.Sprintf("TokenParser.Float(): Atoi failed at token %d: \"%s\"", self.count, self.scanner.Text()))
+	}
+	return ret
+}
+
+func (self *TokenParser) Str() string {
 	bl := self.scanner.Scan()
 	if bl == false {
 		err := self.scanner.Err()
 		if err != nil {
-			panic(fmt.Sprintf("%v", err))
+			panic(fmt.Sprintf("TokenParser: %v", err))
 		} else {
-			panic(fmt.Sprintf("End of input."))
+			panic(fmt.Sprintf("TokenParser: End of input after %d tokens.", self.count))
 		}
 	}
-	ret, err := strconv.ParseFloat(self.scanner.Text(), 64)
-	if err != nil {
-		panic(fmt.Sprintf("TokenReader.Float(): ParseFloat failed at token %d: \"%s\"", self.count, self.scanner.Text()))
-	}
 	self.count++
-	return ret
+	return self.scanner.Text()
+}
+
+// ---------------------------------------
+
+var token_parser = NewTokenParser()
+
+// ---------------------------------------
+
+func main() {
+	return
 }
