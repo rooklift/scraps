@@ -62,7 +62,7 @@ func main() {
 
 	auth := smtp.PlainAuth("", config.Account, config.Password, config.Server)
 
-	m := email.NewMessage(fmt.Sprintf("Report from %s", config.FromName), "")		// Body will be constructed later...
+	m := email.NewMessage(config.Subject, "")		// Body will be constructed later...
 	m.From = mail.Address{Name: config.FromName, Address: config.FromEmail}
 	m.To = []string{config.Recipient}
 
