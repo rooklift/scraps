@@ -184,7 +184,8 @@ func main() {
 		return
 	}
 	b := Board{}
-	b.Load(os.Args[1])
+	input := strings.Join(os.Args[1:], "")
+	b.Load(input)
 	b.Solve(0, 0)
 	b.Print()
 }
