@@ -19,7 +19,6 @@ type Point struct {
 
 type Board struct {
 	vals 			[9][9]int
-	initial_poss	[9][9]int
 	solve_order		[]Point
 	steps			int
 }
@@ -143,29 +142,8 @@ func (self *Board) ChooseSolveOrder() {
 	}
 
 	sort.SliceStable(self.solve_order, func(a, b int) bool {
-
-		a_x := self.solve_order[a].x
-		a_y := self.solve_order[a].y
-		b_x := self.solve_order[b].x
-		b_y := self.solve_order[b].y
-
-		var a_poss int
-		var b_poss int
-
-		if self.initial_poss[a_x][a_y] != 0 {
-			a_poss = self.initial_poss[a_x][a_y]
-		} else {
-			a_poss = len(self.CalculatePossibles(a_x, a_y))
-			self.initial_poss[a_x][a_y] = a_poss
-		}
-
-		if self.initial_poss[b_x][b_y] != 0 {
-			b_poss = self.initial_poss[b_x][b_y]
-		} else {
-			b_poss = len(self.CalculatePossibles(b_x, b_y))
-			self.initial_poss[b_x][b_y] = b_poss
-		}
-
+		a_poss := len(self.CalculatePossibles(self.solve_order[a].x, self.solve_order[a].y))
+		b_poss := len(self.CalculatePossibles(self.solve_order[b].x, self.solve_order[b].y))
 		return a_poss < b_poss
 	})
 }
