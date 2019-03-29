@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -18,6 +19,9 @@ type Point struct {
 
 type Board struct {
 	vals 			[9][9]int
+	initial_poss	[9][9]int
+	solve_order		[]Point
+	steps			int
 }
 
 func (self *Board) Load(s string) {
@@ -36,9 +40,11 @@ func (self *Board) Load(s string) {
 		x, y, err = next_xy(x, y)
 
 		if err != nil {										// We reached the end.
-			return
+			break
 		}
 	}
+
+	self.ChooseSolveOrder()
 }
 
 func (self *Board) Print() {
@@ -60,7 +66,7 @@ func (self *Board) Print() {
 			fmt.Printf("\t---|---|---\n")
 		}
 	}
-	fmt.Printf("\n")
+	fmt.Printf("\n\t%d steps.\n\n", self.steps)
 }
 
 func (self *Board) CalculatePossibles(x, y int) []int {
@@ -126,8 +132,53 @@ func next_xy(x, y int) (int, int, error) {
 	return x, y, nil
 }
 
+func (self *Board) ChooseSolveOrder() {
 
-func (self *Board) Solve(x, y int) bool {
+	for x := 0; x < 9; x++ {
+		for y := 0; y < 9; y++ {
+			if self.vals[x][y] == 0 {
+				self.solve_order = append(self.solve_order, Point{x, y})
+			}
+		}
+	}
+
+	sort.SliceStable(self.solve_order, func(a, b int) bool {
+
+		a_x := self.solve_order[a].x
+		a_y := self.solve_order[a].y
+		b_x := self.solve_order[b].x
+		b_y := self.solve_order[b].y
+
+		var a_poss int
+		var b_poss int
+
+		if self.initial_poss[a_x][a_y] != 0 {
+			a_poss = self.initial_poss[a_x][a_y]
+		} else {
+			a_poss = len(self.CalculatePossibles(a_x, a_y))
+			self.initial_poss[a_x][a_y] = a_poss
+		}
+
+		if self.initial_poss[b_x][b_y] != 0 {
+			b_poss = self.initial_poss[b_x][b_y]
+		} else {
+			b_poss = len(self.CalculatePossibles(b_x, b_y))
+			self.initial_poss[b_x][b_y] = b_poss
+		}
+
+		return a_poss < b_poss
+	})
+}
+
+func (self *Board) Solve(depth int) bool {
+
+	self.steps++
+
+	if depth >= len(self.solve_order) {
+		return true
+	}
+
+	x, y := self.solve_order[depth].x, self.solve_order[depth].y
 
 	// Solve for the board starting at x,y.
 	// Recurses by calling itself with the next values of x,y.
@@ -137,13 +188,9 @@ func (self *Board) Solve(x, y int) bool {
 	if self.vals[x][y] != 0 {
 
 		// We already have the value for this square, so recurse right away...
+		// return self.Solve(depth + 1)
 
-		i, j, err := next_xy(x, y)
-		if err != nil {					// We reached the end.
-			return true
-		}
-
-		return self.Solve(i, j)
+		panic("Already had value.")		// This should be impossible.
 	}
 
 	possibles := self.CalculatePossibles(x, y)
@@ -158,12 +205,7 @@ func (self *Board) Solve(x, y int) bool {
 
 		self.vals[x][y] = p
 
-		i, j, err := next_xy(x, y)
-		if err != nil {
-			return true					// We reached the end.
-		}
-
-		ok := self.Solve(i, j)
+		ok := self.Solve(depth + 1)
 
 		if ok {
 			return true
@@ -186,7 +228,7 @@ func main() {
 	b := Board{}
 	input := strings.Join(os.Args[1:], "")
 	b.Load(input)
-	b.Solve(0, 0)
+	b.Solve(0)
 	b.Print()
 }
 
