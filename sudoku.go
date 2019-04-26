@@ -23,6 +23,18 @@ type Board struct {
 	steps			int
 }
 
+func next_xy(x, y int) (int, int, error) {
+	x += 1
+	if x >= 9 {
+		x = 0
+		y += 1
+		if y >= 9 {
+			return 0, 0, fmt.Errorf("End of sequence")
+		}
+	}
+	return x, y, nil
+}
+
 func (self *Board) Load(s string) {
 
 	var x, y int
@@ -117,18 +129,6 @@ func (self *Board) CalculatePossibles(x, y int) []int {
 	}
 
 	return ret
-}
-
-func next_xy(x, y int) (int, int, error) {
-	x += 1
-	if x >= 9 {
-		x = 0
-		y += 1
-		if y >= 9 {
-			return 0, 0, fmt.Errorf("End of sequence")
-		}
-	}
-	return x, y, nil
 }
 
 func (self *Board) ChooseSolveOrder() {
