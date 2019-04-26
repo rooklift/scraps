@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/fohristiwhirl/sgf"
@@ -51,87 +52,101 @@ func main() {
 
 	// Add to DB...
 
+	var additions []string
+
+	for fullpath := range present_files {
+		if db_files[fullpath] == false {        		// Not in DB
+			additions = append(additions, fullpath)
+		}
+	}
+
+	sort.Strings(additions)
+
 	fmt.Printf("Adding to database...\n")
 	count := 0
 
-	for fullpath := range present_files {
+	for _, fullpath := range additions {
 
-		if db_files[fullpath] == false {        	// Not in DB
+		path, filename := filepath.Split(fullpath)
 
-			path, filename := filepath.Split(fullpath)
+		// For compatibility with Python's split(), any trailing slash characters have to be removed...
 
-			// For compatibility with Python's split(), any trailing \ characters have to be removed...
-
-			if strings.HasSuffix(path, "\\") {
-				path = path[:len(path) - 1]
-			}
-
-			dyer, SZ, HA, PB, PW, RE, DT, EV, err := get_info(fullpath)
-			if err != nil {
-				continue
-			}
-
-			stmt, err := db.Prepare("INSERT INTO Games(path, filename, dyer, SZ, HA, PB, PW, RE, DT, EV)  VALUES(?,?,?,?,?,?,?,?,?,?)")
-			if err != nil {
-				panic(err)
-			}
-
-			res, err := stmt.Exec(path, filename, dyer, SZ, HA, PB, PW, RE, DT, EV)
-			if err != nil {
-				panic(err)
-			}
-
-			_, err = res.LastInsertId()
-			if err != nil {
-				panic(err)
-			}
-
-			fmt.Printf("%s\n", filename)
-			count++
+		if strings.HasSuffix(path, "\\") || strings.HasSuffix(path, "/") {
+			path = path[:len(path) - 1]
 		}
+
+		dyer, SZ, HA, PB, PW, RE, DT, EV, err := get_info(fullpath)
+		if err != nil {
+			continue				// e.g. this will trigger on actual directories
+		}
+
+		stmt, err := db.Prepare("INSERT INTO Games(path, filename, dyer, SZ, HA, PB, PW, RE, DT, EV)  VALUES(?,?,?,?,?,?,?,?,?,?)")
+		if err != nil {
+			panic(err)
+		}
+
+		res, err := stmt.Exec(path, filename, dyer, SZ, HA, PB, PW, RE, DT, EV)
+		if err != nil {
+			panic(err)
+		}
+
+		_, err = res.LastInsertId()
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("%s\n", filename)
+		count++
 	}
 
 	fmt.Printf("%d files added\n", count)
 
 	// Delete from DB...
 
+	var deletions []string
+
+	for fullpath := range db_files {
+		if present_files[fullpath] == false {			// Not present on disk
+			deletions = append(deletions, fullpath)
+		}
+	}
+
+	sort.Strings(deletions)
+
 	fmt.Printf("Removing from database...\n")
 	count = 0
 
-	for fullpath := range db_files {
+	for _, fullpath := range deletions {
 
-		if present_files[fullpath] == false {		// Not present on disk
+		path, filename := filepath.Split(fullpath)
 
-			path, filename := filepath.Split(fullpath)
+		// For compatibility with Python's split(), any trailing \ characters have to be removed...
 
-			// For compatibility with Python's split(), any trailing \ characters have to be removed...
-
-			if strings.HasSuffix(path, "\\") {
-				path = path[:len(path) - 1]
-			}
-
-			stmt, err := db.Prepare("DELETE FROM Games WHERE path = ? AND filename = ?")
-			if err != nil {
-				panic(err)
-			}
-
-			res, err := stmt.Exec(path, filename)
-			if err != nil {
-				panic(err)
-			}
-
-			affect, err := res.RowsAffected()
-			if err != nil {
-				panic(err)
-			}
-
-			if affect != 1 {
-				fmt.Printf("WARNING: preceding operation affected %d rows\n")
-			}
-
-			fmt.Printf("%s\n", filename)
-			count++
+		if strings.HasSuffix(path, "\\") {
+			path = path[:len(path) - 1]
 		}
+
+		stmt, err := db.Prepare("DELETE FROM Games WHERE path = ? AND filename = ?")
+		if err != nil {
+			panic(err)
+		}
+
+		res, err := stmt.Exec(path, filename)
+		if err != nil {
+			panic(err)
+		}
+
+		affect, err := res.RowsAffected()
+		if err != nil {
+			panic(err)
+		}
+
+		if affect != 1 {
+			fmt.Printf("WARNING: preceding operation affected %d rows\n")
+		}
+
+		fmt.Printf("%s\n", filename)
+		count++
 	}
 
 	fmt.Printf("%d entries removed\n", count)
@@ -144,7 +159,7 @@ func main() {
 
 func get_info(fullpath string) (dyer, SZ, HA, PB, PW, RE, DT, EV string, err error) {
 
-	root, err := sgf.Load(fullpath)
+	root, err := sgf.LoadSGFMainLine(fullpath)
 	if err != nil {
 		return
 	}
