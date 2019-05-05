@@ -1,0 +1,233 @@
+<HTML>
+ <HEAD>
+  <!-- $MVD$:app("MicroVision WebExpress","769") -->
+  <!-- $MVD$:template("","0","0") -->
+  <!-- $MVD$:color("18","80ff","Orange","1") -->
+  <!-- $MVD$:color("19","ffd6ce","Lavender","1") -->
+  <TITLE>BMP File Format</TITLE>
+  <META NAME="GENERATOR" CONTENT="Microsoft FrontPage 4.0">
+ </HEAD>
+ <BODY>
+  <P ALIGN=CENTER>
+   <FONT SIZE="5"><B><U>Windows BMP Bitmap File Format</U></B></FONT></P>
+  <p align="center">(Last Mod: <i>
+  <!--webbot bot="Timestamp" S-Type="EDITED"
+  S-Format="%d %B %Y %H:%M:%S" startspan -->08 August 2004 15:33:30<!--webbot bot="Timestamp" i-checksum="46113" endspan -->
+  )</i></p>
+  <p align="left"><i><a href="../../index.html">ECE-1021 Home</a></i></p>
+  <h1 align="left">Overview</h1>
+  <p align="left">Several popular formats exist for digital image files, usually 
+  referred to by the file extension used. The more common formats include BMP, 
+  JPG, GIF, and PNG. As is typically the case, there are pros and cons 
+  associated with each format. From the standpoint of gaining familiarity with 
+  the subject of image files, the Windows BMP file offers significant advantages 
+  because of its simplicity. It also has the advantage of being highly 
+  standardized and extremely widespread. Its principal disadvantage is it does 
+  not support effective image compression except on specific types of images. 
+  However, there is a hidden benefit to this shortcoming. Since other image file 
+  formats do offer significant data compression, very few images stored in BMP 
+  format are compressed and, therefore, a very simple BMP editor that doesn't 
+  support working with compressed BMP files will seldom encounter a file it 
+  can't work.</p>
+  <p align="left">The information contained here is very minimal. A much more 
+  thorough treatment of image file formats can be found in such texts as <i>
+  Compressed File Formats </i>by John Miano.</p>
+  <p align="left">The Windows BMP file format dates back nearly two decades and 
+  several incompatible versions existed at one time. However, since Microsoft 
+  has full control of the format definition, these older forms are virtually 
+  never encountered and the format has been very stable since the version 
+  released with Windows 3.0. Certainly enhancements have been added to the 
+  format definition since then, but they have occurred in an upwardly compatible 
+  fashion.</p>
+  <p align="left">The file is a binary file (as opposed to a text file) that is 
+  separated into four sections (though one, the color table, does not always 
+  exist). The sections, in order from the start of the file, is the File Header, 
+  the Image Header, the Color Table, and finally the Pixel Data itself. The File 
+  Header is used primarily for the accessing software to confirm that the file 
+  is (at least probably) a BMP file, to tell exactly how large the file is, and 
+  to learn where the actual image data is located within the file. The Image 
+  Header gives the detailed information about the image and its data format such 
+  as the height and width of the image, how many bits are used per pixel, and 
+  whether the image data is compressed or not. The Color Table may or may not be 
+  present, depending on the format of the image data. When it does exist, it is 
+  either a color palette or a set of bitmasks used to extract the color 
+  information from the image data. Finally, the rest of the file is the image 
+  data itself. Each of these four sections is discussed in some detail below.</p>
+  <h1 align="left">The File Header&nbsp; </h1>
+  <p align="left">The File Header has exactly fourteen bytes in it. The first 
+  two bytes must be the ASCII codes for the characters 'B' and 'M'. The software 
+  should check these values to confirm that the file it is reading is most 
+  probably a Windows BMP file. The second field is a four byte integer the 
+  contains the size of the file in bytes. The third and fourth fields are each 
+  two bytes long and are reserved for future extensions to the format 
+  definition. The present definition requires that both of these fields be zero. 
+  The final four byte field is an integer that gives the offset of the start of 
+  the Pixel Data section relative to the start of the file.</p>
+  <p align="left">BITMAPFILEHEADER: BMP File Header Contents</p>
+  <table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="100%">
+    <tr>
+      <td width="17%">Field Name</td>
+      <td width="13%" align="center">Size in Bytes</td>
+      <td width="70%">Description</td>
+    </tr>
+    <tr>
+      <td width="17%">bfType</td>
+      <td width="13%" align="center">2</td>
+      <td width="70%">The characters &quot;BM&quot;</td>
+    </tr>
+    <tr>
+      <td width="17%">bfSize</td>
+      <td width="13%" align="center">4</td>
+      <td width="70%">The size of the file in bytes</td>
+    </tr>
+    <tr>
+      <td width="17%">bfReserved1</td>
+      <td width="13%" align="center">2</td>
+      <td width="70%">Unused - must be zero</td>
+    </tr>
+    <tr>
+      <td width="17%">bfReserved2</td>
+      <td width="13%" align="center">2</td>
+      <td width="70%">Unused - must be zero</td>
+    </tr>
+    <tr>
+      <td width="17%">bfOffBits</td>
+      <td width="13%" align="center">4</td>
+      <td width="70%">Offset to start of Pixel Data</td>
+    </tr>
+  </table>
+  <h1 align="left">The Image Header</h1>
+  <p align="left">There are actually two distinct options for the Image Header - 
+  one that was developed for the OS/2 BMP format and one that is for the Windows 
+  BMP format. The OS/2 Image Header is exactly 12 bytes long while the Windows 
+  Image Header is at least 40 bytes long. Fortunately, the first four bytes of 
+  each format is the length of the Image Header in bytes and therefore a simple 
+  examination of this value tells you which format is being used. While the 
+  Windows Image Header allows headers longer than 40 bytes and this was 
+  supported by Windows 95, few applications ever adopted it.</p>
+  <p align="left">At this point we will make the first of a few decisions on how 
+  we wish to limit the scope of our program's capabilities. The issue is trading 
+  off simplicity for capability. Given the purpose of this program - namely to 
+  introduce the topic of binary files and image file manipulation and to provide 
+  a means for your programs to generate quality images - it is entirely 
+  reasonable to select a very narrowly defined range of image format that our 
+  program will be able to work. The program's capabilities can always be 
+  expanded later.</p>
+  <p align="left">For simplicity, we will therefore choose to limit our program 
+  to being able to work with BMP files that use a Windows Image Header that is 
+  exactly 40 bytes in length - it turns out that this is not much of a 
+  restriction since few BMP files use any of the alternatives). In addition, we 
+  will choose to limit our program to working only with uncompressed image files 
+  - and again it turns out that this is not much of a restriction since few BMP 
+  files are compressed in the first place. </p>
+  <p align="left">However, we will be placing a noticeable restriction on 
+  ourselves by limiting the bitcounts (the number of bits of data per pixel) 
+  that our program will support. The presently allowable bitcounts for Windows 
+  BMP files are 1, 2, 4, 8, 16, 24, and 32. Bitcounts that are one byte or 
+  smaller are palletized meaning that the individual pixel data is actually the 
+  number of a palette entry - much along the lines of a &quot;paint-by-number&quot; 
+  painting. The multi-byte bitcounts are so called &quot;true color&quot; bitmaps because 
+  each entry contains the full color information for that pixel. </p>
+  <p align="left">Of the true color bitcounts, the only one we will support is 
+  the 8-bit format. This allows a color palette with 256 entries which is more 
+  than sufficient to render amazingly impressive computer graphics although it's 
+  limitations are generally readily apparent when dealing with photographic 
+  images. Extending our program to support the lower bitcounts is reasonably 
+  straightforward.</p>
+  <p align="left">Of the true color bitcounts, the only one we will support is 
+  the 24-bit format. In this format, the color information for each pixel is 
+  contained in three contiguous bytes of data with one byte for blue, green, and 
+  red respectively. The 16 and 32 bit options involve the use of bitmasks to 
+  separate out the color components. The primary advantage of these two options 
+  is that most modern processors are better suited to reading and writing data 
+  in 16 and/or 32 bit blocks than in individual bytes. This was probably an 
+  attempt to be able to read and write the image data to and from slower 
+  secondary storage devices faster but, if speed is an issue, most people opt 
+  for one of the compressed file formats. As a result, these options are 
+  relatively rare and we are not sacrificing much by not supporting them. </p>
+  <p align="left">BITMAPINFOHEADER: BMP Image Header Contents for Windows Format</p>
+  <table border="1" cellpadding="0" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="100%">
+    <tr>
+      <td width="17%">Field Name</td>
+      <td width="13%" align="center">Size in Bytes</td>
+      <td width="70%">Description</td>
+    </tr>
+    <tr>
+      <td width="17%">biSize</td>
+      <td width="13%" align="center">4</td>
+      <td width="70%">Header Size - Must be at least 40</td>
+    </tr>
+    <tr>
+      <td width="17%">biWidth</td>
+      <td width="13%" align="center">4</td>
+      <td width="70%">Image width in pixels</td>
+    </tr>
+    <tr>
+      <td width="17%">biHeight</td>
+      <td width="13%" align="center">4</td>
+      <td width="70%">Image height in pixels</td>
+    </tr>
+    <tr>
+      <td width="17%">biPlanes</td>
+      <td width="13%" align="center">2</td>
+      <td width="70%">Must be 1</td>
+    </tr>
+    <tr>
+      <td width="17%">biBitCount</td>
+      <td width="13%" align="center">2</td>
+      <td width="70%">Bits per pixel - 1, 2, 4, 8, 16, 24, or 32</td>
+    </tr>
+    <tr>
+      <td width="17%">biCompression</td>
+      <td width="13%" align="center">4</td>
+      <td width="70%">Compression type (0 = uncompressed)</td>
+    </tr>
+    <tr>
+      <td width="17%">biSizeImage</td>
+      <td width="13%" align="center">4</td>
+      <td width="70%">Image Size - may be zero for uncompressed images</td>
+    </tr>
+    <tr>
+      <td width="17%">biXPelsPerMeter</td>
+      <td width="13%" align="center">4</td>
+      <td width="70%">Preferred resolution in pixels per meter</td>
+    </tr>
+    <tr>
+      <td width="17%">biYPelsPerMeter</td>
+      <td width="13%" align="center">4</td>
+      <td width="70%">Preferred resolution in pixels per meter</td>
+    </tr>
+    <tr>
+      <td width="17%">biClrUsed</td>
+      <td width="13%" align="center">4</td>
+      <td width="70%">Number Color Map entries that are actually used</td>
+    </tr>
+    <tr>
+      <td width="17%">biClrImportant</td>
+      <td width="13%" align="center">4</td>
+      <td width="70%">Number of significant colors</td>
+    </tr>
+  </table>
+  <p align="left">For our purposes, we can ignore the last five fields.</p>
+  <h1 align="left">The Color Table</h1>
+  <p align="left">If we are dealing with a 24-bit image, then there is no Color 
+  Table present. If we are dealing with an 8-bit Windows (as opposed to OS/2) 
+  BMP image then the Color Table consists of 256 entries with each entry 
+  consisting of four bytes of data. The first three byte are the blue, green, 
+  and red color values respectively. The fourth byte is unused and must be equal 
+  to zero. The only difference between the Windows and the OS/2 version is that 
+  the latter does not have this fourth byte.</p>
+  <h1 align="left">The Pixel Data</h1>
+  <p>In the 8-bit format, each pixel is represented by a single byte of data, 
+  that byte is an index into the Color Table. In the 24-bit format, each pixel 
+  is represented by three consecutive bytes of data that specify the blue, 
+  green, and red component values respectively.</p>
+  <p>The pixel data in a BMP file is scan line padded to a 32-bit (4-byte)
+  boundary. What this means is that if you have a 1071x363 24-bit image, that
+  each scan line (one row of data in the image) consists of 363 pixels each of
+  which requires 3-bytes (24-bits) to encode. Thus you have 1,089 bytes of data
+  per line. The format requires that scan lines be multiples of 4-bytes so 3
+  null bytes (value is zero) are added to the end of the data for each line to
+  make a total of 1,092 (4x273) bytes per line.</p>
+ </BODY>
+</HTML>
