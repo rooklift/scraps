@@ -19,8 +19,6 @@ var client * http.Client = &http.Client{
     Timeout: 10 * time.Second,
 }
 
-
-
 func getline()  string {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
