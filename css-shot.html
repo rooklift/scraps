@@ -5,18 +5,18 @@
 
 <style type="text/css">
 
-  body {
-    background-color: #000066;
-  }
+	body {
+		background-color: #000066;
+	}
 
-  .shot {
-    color: #ffffff;
-    position: absolute;
-    top: 20px;
-    left: 100px;
-    transform: rotate(20deg);
-    transition: 0.1s linear;
-  }
+	.shot {
+		color: #ffffff;
+		position: absolute;
+		top: 20px;
+		left: 100px;
+		transform: rotate(20deg);
+		transition: 0.1s linear;
+	}
 
 </style>
 </head>
@@ -29,25 +29,25 @@
 
 function zap() {
 
-  // Upon creation do this...
+	// Upon creation do this...
 
-  let d = document.createElement("div");
-  let text = document.createTextNode("--");
-  d.appendChild(text);
-  d.className = "shot";
-  document.body.appendChild(d);
+	let d = document.createElement("div");
+	let text = document.createTextNode("--");
+	d.appendChild(text);
+	d.className = "shot";
+	document.body.appendChild(d);
 
-  d.addEventListener("transitionend", () => {
-  	d.innerHTML = "Zap";
-  	setTimeout(() => d.remove(), 500);
-  }, false);
+	d.addEventListener("transitionend", () => {
+		d.innerHTML = "Zap";
+		setTimeout(() => d.remove(), 500);
+	}, false);
 
-  // Next frame do this, triggering the transition...
+	// Next frame do this, triggering the transition...
 
-  requestAnimationFrame(() => {
-    d.style["left"] = "400px";
-    d.style["top"] = "100px";
-  });
+	requestAnimationFrame(() => {
+		d.style["left"] = "400px";
+		d.style["top"] = "100px";
+	});
 }
 </script>
 
