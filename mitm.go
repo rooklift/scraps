@@ -1,6 +1,7 @@
 package main
 
-// This program exists to MITM the Lizzie / LZ comms for research.
+// This program exists to MITM any program that is controlled by some other
+// program via stdin/out/err, for research purposes.
 
 import (
 	"bufio"
@@ -9,7 +10,7 @@ import (
 	"os/exec"
 )
 
-const REAL_PROGRAM = "./real_leelaz.exe"
+const REAL_PROGRAM = "./path_to_real_program.exe"
 
 var log_chan = make(chan []byte, 128)
 
@@ -22,9 +23,9 @@ func main() {
 
 	exec_command.Start()
 
-	go mitm(os.Stdin, i_pipe, []byte("Lizzie: "))
-	go mitm(o_pipe, os.Stdout, []byte("STDOUT: "))
-	go mitm(e_pipe, os.Stderr, []byte("stderr: "))
+	go mitm(os.Stdin, i_pipe, []byte("--> "))
+	go mitm(o_pipe, os.Stdout, []byte("<-- "))
+	go mitm(e_pipe, os.Stderr, []byte("(e) "))
 	logger()
 }
 
