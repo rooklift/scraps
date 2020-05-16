@@ -11,6 +11,7 @@ import (
 )
 
 const REAL_PROGRAM = "./path_to_real_program.exe"
+const LOGFILE_NAME = "mitm_log.txt"
 
 var log_chan = make(chan []byte, 128)
 
@@ -47,7 +48,7 @@ func mitm(input io.Reader, output io.Writer, prefix []byte) {
 
 func logger() {
 
-	outfile, _ := os.Create("mitm_log.txt")
+	outfile, _ := os.Create(LOGFILE_NAME)
 
 	for {
 		b := <- log_chan
