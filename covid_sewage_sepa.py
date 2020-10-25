@@ -8,7 +8,7 @@ class DataPoint:
 		self.date = datetime.datetime.strptime(date, "%d/%m/%Y")
 		self.value = int(float(value))
 
-def load_sites(lines):		# Area   Site   Date   Pop-band   Population   Result Description   Reported Value   Days Since
+def load_sites(lines):		# Area   Site   Date   Pop-band   Population   Result description   Reported value   Days since
 	sites = dict()
 	for line in lines:
 		tokens = line.split("\t")
@@ -21,7 +21,7 @@ def load_sites(lines):		# Area   Site   Date   Pop-band   Population   Result De
 		sitedata.append(DataPoint(date = tokens[2], value = tokens[6]))
 	return sites
 
-def draw(sites):
+def draw(sites):						# dict: sitename --> [array of DataPoints]
 	for site in sites:
 		sitedata = sites[site]
 		x = [o.date for o in sitedata]
