@@ -32,8 +32,8 @@ def draw(sites):
 def main():
 	with open(sys.argv[1], "rb") as f:
 		raw = f.read()
-		decoded = raw.decode("utf-16-le")
-		lines = [s.strip() for s in decoded.split("\n") if s.strip() != ""]
+	decoded = raw.decode("utf-16-le")
+	lines = [s.strip() for s in decoded.split("\n") if s.strip() != ""]
 	sites = load_sites(lines[1:])		# Skip top line, which is headings
 	draw(sites)
 
