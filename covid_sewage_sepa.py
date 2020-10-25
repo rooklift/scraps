@@ -12,12 +12,9 @@ def load_sites(lines):		# Area   Site   Date   Pop-band   Population   Result de
 	sites = dict()
 	for line in lines:
 		tokens = line.split("\t")
-		site = tokens[1]
-		if site in sites:
-			sitedata = sites[site]
-		else:
-			sitedata = []
-			sites[site] = sitedata
+		if tokens[1] not in sites:
+			sites[tokens[1]] = []
+		sitedata = sites[tokens[1]]
 		sitedata.append(DataPoint(date = tokens[2], value = tokens[6]))
 	return sites
 
