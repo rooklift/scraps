@@ -1,4 +1,4 @@
-import datetime, re, sys
+import datetime, sys
 import matplotlib.pyplot as plt
 
 # For reading csv from https://informatics.sepa.org.uk/RNAmonitoring/
