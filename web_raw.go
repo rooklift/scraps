@@ -10,14 +10,9 @@ import (
 	"net/http/httputil"
 	"os"
 	"strings"
-	"time"
 )
 
 const BYTES_TO_SHOW = 2048
-
-var client * http.Client = &http.Client{
-    Timeout: 10 * time.Second,
-}
 
 func getline()  string {
 	scanner := bufio.NewScanner(os.Stdin)
