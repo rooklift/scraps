@@ -31,6 +31,9 @@ func main()  {
 			}
 		}
 
+		// Note, http.NewRequest() is the way to get more control over details.
+		// See logwatch.go
+
 		resp, err := http.Get(url)
 	    if err != nil {
 	        fmt.Printf("error calling http.Get: %s\n", err)
