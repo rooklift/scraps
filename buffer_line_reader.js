@@ -5,7 +5,7 @@ function NewBufferLineReader(buf) {
 	o.buf = buf;
 	o.index = 0;
 
-	o.next = function() {
+	o.next = function() {			// Return next line in the buffer, or null if finished.
 
 		if (this.index >= this.buf.length) {
 			return null;
@@ -27,6 +27,22 @@ function NewBufferLineReader(buf) {
 			}
 
 			i++;
+		}
+	};
+
+	o.lines = function() {			// Remaining lines only, as an array.
+
+		let lines = [];
+
+		while (1) {
+
+			let s = this.next();
+
+			if (typeof s !== "string") {
+				return lines;
+			}
+
+			lines.push(s);
 		}
 	};
 
