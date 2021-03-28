@@ -15,9 +15,13 @@ func main() {
 
 	var i uint64
 
-	for i = 0; i < 1024 * 1024 * MB; i++ {
-		w.WriteByte(byte(rand.Intn(256)))
-	}
+	for i = 0; i < (1024 * 1024 * MB) / 8; i++ {
 
+		eight := rand.Uint64()
+
+		for shift := 0; shift <= 56; shift += 8 {
+			w.WriteByte(byte(eight << shift))
+		}
+	}
 }
 
