@@ -20,7 +20,7 @@ func main() {
 		eight := rand.Uint64()
 
 		for shift := 0; shift <= 56; shift += 8 {
-			w.WriteByte(byte(eight << shift))
+			w.WriteByte(byte(eight >> shift))
 		}
 	}
 }
