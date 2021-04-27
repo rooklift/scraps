@@ -11,4 +11,4 @@ for f in files:
 		strings.append(infile.read())
 
 with open("output.txt", "w") as outfile:
-	outfile.write("\n".join(strings))
+	outfile.write("\n\n".join(strings))
