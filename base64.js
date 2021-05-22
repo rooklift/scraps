@@ -6,11 +6,13 @@ const base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345
 
 exports.decode = (s) => {
 
-	while (s[s.length - 1] === "=") {
-		s = s.slice(0, -1);
+	let inputlength = s.length;
+
+	while (s[inputlength - 1] === "=") {
+		inputlength--;
 	}
 
-	let retlength = Math.floor(s.length * 0.75);
+	let retlength = Math.floor(inputlength * 0.75);
 
 	let ret = Buffer.alloc(retlength);
 	let index = 0;
@@ -18,9 +20,9 @@ exports.decode = (s) => {
 	let workbits = 0;
 	let work = 0;
 
-	for (let c of s) {
+	for (let i = 0; i < inputlength; i++) {
 
-		let ascii = c.charCodeAt(0);
+		let ascii = s.charCodeAt(i);
 		let val;
 
 		if (ascii >= 65 && ascii <= 90) {			// A-Z
@@ -53,6 +55,10 @@ exports.decode = (s) => {
 		workbits += 6;
 		workbits %= 8;
 
+	}
+
+	if (work) {
+		throw "base64 decode(): unexpected end of input";
 	}
 
 	return ret;
