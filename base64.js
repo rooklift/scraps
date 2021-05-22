@@ -12,6 +12,10 @@ exports.decode = (s) => {
 		inputlength--;
 	}
 
+	if (inputlength % 4 === 1) {
+		throw "base64 decode(): invalid input length";
+	}
+
 	let retlength = Math.floor(inputlength * 0.75);
 
 	let ret = Buffer.alloc(retlength);
