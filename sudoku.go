@@ -1,5 +1,7 @@
 package main
 
+// Slow and bad. See rooklift/sudoku for better.
+
 import (
 	"fmt"
 	"os"
