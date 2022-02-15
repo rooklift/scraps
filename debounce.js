@@ -7,11 +7,11 @@ function debounce(f, delay) {
 	
 	let pending = false;
 
-	return () => {
+	return (...args) => {
 		if (!pending) {
 			pending = true;
 			setTimeout(() => {
-				f();
+				f(...args);
 				pending = false;
 			}, delay);
 		}
@@ -20,14 +20,14 @@ function debounce(f, delay) {
 
 
 
-function test() {
-	console.log("hi");
+function test(a, b, c) {
+	console.log(a, b, c);
 }
 
 
 
 let foo = debounce(test);
 
-foo();
-foo();
-foo();
+foo(1, 2, 3);
+foo(4, 5, 6);
+foo(7, 8, 9);
