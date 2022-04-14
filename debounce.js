@@ -26,7 +26,7 @@ function test(a, b, c) {
 
 
 
-let foo = debounce(test);
+let foo = debounce(test, 50);
 
 foo(1, 2, 3);
 foo(4, 5, 6);
