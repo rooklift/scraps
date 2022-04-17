@@ -16,7 +16,11 @@ def timer():
 			break
 		except:
 			time.sleep(0.1)
-	print(time.monotonic() - start_time)
+	elapsed = time.monotonic() - start_time
+	minutes = int(elapsed / 60)
+	seconds = int(elapsed) % 60
+	hundredths = int((elapsed - int(elapsed)) * 100)
+	print("{:02}:{:02}.{:02}".format(minutes, seconds, hundredths))
 
 while True:
 	timer()
