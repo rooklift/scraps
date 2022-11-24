@@ -9,26 +9,22 @@ def make_root(o):
 	root = ";"
 
 	try:
-		pb = o["players"]["black"]["username"]
-		root += f"PB[{pb}]"
+		root += "PB[{}]".format(o["players"]["black"]["username"])
 	except:
 		pass
 
 	try:
-		pw = o["players"]["white"]["username"]
-		root += f"PW[{pw}]"
+		root += "PW[{}]".format(o["players"]["white"]["username"])
 	except:
 		pass
 
 	try:
-		ru = o["rules"]
-		root += f"RU[{ru}]"
+		root += "RU[{}]".format(o["rules"])
 	except:
 		pass
 
 	try:
-		km = o["komi"]
-		root += f"KM[{km}]"
+		root += "KM[{}]".format(o["komi"])
 	except:
 		pass
 
@@ -41,7 +37,7 @@ def make_move_nodes(o):
 	colour = "B"
 	for move in o["gamedata"]["moves"]:
 		sgf = chr(move[0] + 97) + chr(move[1] + 97)
-		node = f";{colour}[{sgf}]"
+		node = ";{}[{}]".format(colour, sgf)
 		move_string_elements.append(node)
 		colour = "B" if colour == "W" else "W"
 	return "".join(move_string_elements)
@@ -49,8 +45,8 @@ def make_move_nodes(o):
 # -------------------------------------------------------------------------------------------------
 
 game_id = input("OGS game ID? ")
-url = f"https://online-go.com/api/v1/games/{game_id}"
+url = "https://online-go.com/api/v1/games/{}".format(game_id)
 j = requests.get(url).json()
 
 print("(" + make_root(j) + make_move_nodes(j) + ")")
-
+input()
