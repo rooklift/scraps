@@ -6,22 +6,20 @@ import requests
 
 def make_root(o):
 
-	access = {		# e.g. one can get the PB data by accessing o["players"]["black"]["username"]
-		"PB": ["players", "black", "username"],
-		"PW": ["players", "white", "username"],
-		"RU": ["rules"],
-		"KM": ["komi"],
-		"GN": ["gamedata", "game_name"],
+	access = {
+		"PB": lambda : o["players"]["black"]["username"],
+		"PW": lambda : o["players"]["white"]["username"],
+		"RU": lambda : o["rules"],
+		"KM": lambda : o["komi"],
+		"GN": lambda : o["gamedata"]["game_name"],
+		"DT": lambda : o["started"].split("T")[0],
 	}
 
 	root = ";CA[UTF-8]GM[1]FF[4]"
 
-	for sgf_key, arr in access.items():
-		foo = o
+	for sgf_key, fn in access.items():
 		try:
-			for key in arr:
-				foo = foo[key]
-			root += "{}[{}]".format(sgf_key, foo)
+			root += "{}[{}]".format(sgf_key, fn())
 		except:
 			pass
 
