@@ -29,16 +29,31 @@ def make_root(o):
 # -------------------------------------------------------------------------------------------------
 
 def make_move_nodes(o):
+
+	if o["gamedata"]["free_handicap_placement"]:
+		hc_countdown = o["handicap"] if o["handicap"] > 1 else 0
+	else:
+		hc_countdown = 0
+
 	move_string_elements = []
+
 	colour = "B"
+
 	for move in o["gamedata"]["moves"]:
+
 		if move[0] < 0 or move[1] < 0:
 			coord = ""
 		else:
 			coord = chr(move[0] + 97) + chr(move[1] + 97)
+
 		node = ";{}[{}]".format(colour, coord)
 		move_string_elements.append(node)
-		colour = "B" if colour == "W" else "W"
+
+		if hc_countdown:
+			hc_countdown -= 1
+		if hc_countdown == 0:
+			colour = "B" if colour == "W" else "W"
+			
 	return "".join(move_string_elements)
 
 # -------------------------------------------------------------------------------------------------
