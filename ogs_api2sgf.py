@@ -9,6 +9,7 @@ def make_root(o):
 	access = {
 		"PB": lambda : o["players"]["black"]["username"],
 		"PW": lambda : o["players"]["white"]["username"],
+		"SZ": lambda : o["width"] if o["width"] == o["height"] else "{}:{}".format(o["width"], o["height"]),
 		"RU": lambda : o["rules"],
 		"KM": lambda : o["komi"],
 		"GN": lambda : o["gamedata"]["game_name"],
