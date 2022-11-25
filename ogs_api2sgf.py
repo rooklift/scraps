@@ -1,5 +1,3 @@
-# Doesn't handle handicap games or games with setup.
-
 import requests
 
 # -------------------------------------------------------------------------------------------------
@@ -24,20 +22,27 @@ def make_root(o):
 		except:
 			pass
 
+	if o["gamedata"]["initial_state"]["black"]:
+		s = o["gamedata"]["initial_state"]["black"]
+		coords = [s[i : i + 2] for i in range(0, len(s), 2)]
+		root += "AB[{}]".format("][".join(coords))
+
+	if o["gamedata"]["initial_state"]["white"]:
+		s = o["gamedata"]["initial_state"]["white"]
+		coords = [s[i : i + 2] for i in range(0, len(s), 2)]
+		root += "AW[{}]".format("][".join(coords))
+
 	return root
 
 # -------------------------------------------------------------------------------------------------
 
 def make_move_nodes(o):
 
-	if o["gamedata"]["free_handicap_placement"]:
-		hc_countdown = o["handicap"] if o["handicap"] > 1 else 0
-	else:
-		hc_countdown = 0
-
 	move_string_elements = []
 
-	colour = "B"
+	colour = o["gamedata"]["initial_player"][0].upper()
+	if colour not in ["B", "W"]:
+		raise ValueError
 
 	for move in o["gamedata"]["moves"]:
 
@@ -49,11 +54,9 @@ def make_move_nodes(o):
 		node = ";{}[{}]".format(colour, coord)
 		move_string_elements.append(node)
 
-		if hc_countdown:
-			hc_countdown -= 1
-		if hc_countdown == 0:
+		if not o["gamedata"]["free_handicap_placement"] or len(move_string_elements) >= o["handicap"]:
 			colour = "B" if colour == "W" else "W"
-			
+
 	return "".join(move_string_elements)
 
 # -------------------------------------------------------------------------------------------------
