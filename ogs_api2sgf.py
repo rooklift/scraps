@@ -1,4 +1,4 @@
-import requests
+import requests, sys
 
 # -------------------------------------------------------------------------------------------------
 
@@ -61,7 +61,11 @@ def make_move_nodes(o):
 
 # -------------------------------------------------------------------------------------------------
 
-game_id = input("OGS game ID? ")
+if len(sys.argv) > 1:
+	game_id = sys.argv[-1]
+else:
+	game_id = input("OGS game ID? ")
+
 url = "https://online-go.com/api/v1/games/{}".format(game_id)
 j = requests.get(url).json()
 
