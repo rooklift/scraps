@@ -71,4 +71,4 @@ j = requests.get(url).json()
 
 print()
 print("(" + make_root(j) + make_move_nodes(j) + ")")
-input()
+print()
