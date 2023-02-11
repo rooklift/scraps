@@ -25,4 +25,3 @@ while True:
 		print(msg, end="")
 	except queue.Empty:
 		time.sleep(0.1)
-
