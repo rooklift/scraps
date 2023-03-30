@@ -66,6 +66,9 @@ if len(sys.argv) > 1:
 else:
 	game_id = input("OGS game ID? ")
 
+if "/game/" in game_id:			# e.g. https://online-go.com/game/123456
+	game_id = game_id.split("/game/")[1]
+
 url = "https://online-go.com/api/v1/games/{}".format(game_id)
 j = requests.get(url).json()
 
