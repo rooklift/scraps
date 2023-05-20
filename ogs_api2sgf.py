@@ -1,10 +1,43 @@
-import requests, sys
+import json, requests, sys
+
+# -------------------------------------------------------------------------------------------------
+
+def result_string(o):
+	try:
+		b_score = o["gamedata"]["score"]["black"]["total"]
+		w_score = o["gamedata"]["score"]["white"]["total"]
+		if type(b_score) in [int, float] and type(w_score) in [int, float]:
+			if b_score > w_score:
+				return "B+{}".format(b_score - w_score)
+			elif w_score > b_score:
+				return "W+{}".format(w_score - b_score)
+	except:
+		pass
+
+	try:
+		if o["white_lost"] and not o["black_lost"]:
+			if o["outcome"] == "Resignation":
+				return "B+R"
+			else:
+				return "B+"
+		elif o["black_lost"] and not o["white_lost"]:
+			if o["outcome"] == "Resignation":
+				return "W+R"
+			else:
+				return "W+"
+	except:
+		pass
+
+	return ""
 
 # -------------------------------------------------------------------------------------------------
 
 def make_root(o):
 
-	access = {
+	access = {	# lambdas, because many of these could throw with KeyError or somesuch...
+		"CA": lambda : "UTF-8",
+		"GM": lambda : 1,
+		"FF": lambda : 4,
 		"PB": lambda : o["players"]["black"]["username"],
 		"PW": lambda : o["players"]["white"]["username"],
 		"SZ": lambda : o["width"] if o["width"] == o["height"] else "{}:{}".format(o["width"], o["height"]),
@@ -12,9 +45,10 @@ def make_root(o):
 		"KM": lambda : o["komi"],
 		"GN": lambda : o["gamedata"]["game_name"],
 		"DT": lambda : o["started"].split("T")[0],
+		"RE": lambda : result_string(o),
 	}
 
-	root = ";CA[UTF-8]GM[1]FF[4]"
+	root = ";"
 
 	for sgf_key, fn in access.items():
 		try:
