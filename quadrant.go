@@ -7,8 +7,16 @@ import (
 	"image"
 	"image/png"
 	"os"
+	"path/filepath"
 	"strings"
 )
+
+// image.Image is an interface. The underlying object may or may not have the SubImage() method.
+// Later we test for this by trying to type switch an image to the following...
+
+type SubImager interface {
+	SubImage(r image.Rectangle) image.Image
+}
 
 func main() {
 	args := os.Args[1:]
@@ -45,48 +53,51 @@ func handle(fpath string) error {
 	half_width := (bounds.Max.X - bounds.Min.X) / 2
 	half_height := (bounds.Max.Y - bounds.Min.Y) / 2
 
-	// Declare what method we require the image to have if we're to crop it...
+	// Check if the image has SubImage() method... if yes, treat it as such...
 
-	type Croppable interface {
-		SubImage(r image.Rectangle) image.Image
-	}
-
-	// Try to treat the image as satisfying that interface...
-
-	img_as_croppable, ok := img.(Croppable)
+	img_as_croppable, ok := img.(SubImager)
 	if !ok {
 		return fmt.Errorf("%v - can't be cropped!\n", fpath)
 	}
 
-	// Perform the crops...
+	// Perform the crops... if the app is named top_left or similar, perform only that crop...
 
-	var results []image.Image
+	img_path_no_ext := strings.TrimSuffix(fpath, ".png")
 
-	for j := 0; j <= 1; j++ {
-		for i := 0; i <= 1; i++ {
+	app_basename := filepath.Base(os.Args[0])
+
+	if strings.Contains(app_basename, "top_left") {
+		return write_png(img_as_croppable.SubImage(image.Rect(0, 0, half_width, half_height)), img_path_no_ext + " (0).png")
+	} else if strings.Contains(app_basename, "top_right") {
+		return write_png(img_as_croppable.SubImage(image.Rect(half_width, 0, half_width * 2, half_height)), img_path_no_ext + " (1).png")
+	} else if strings.Contains(app_basename, "bottom_left") {
+		return write_png(img_as_croppable.SubImage(image.Rect(0, half_height, half_width, half_height * 2)), img_path_no_ext + " (2).png")
+	} else if strings.Contains(app_basename, "bottom_right") {
+		return write_png(img_as_croppable.SubImage(image.Rect(half_width, half_height, half_width * 2, half_height * 2)), img_path_no_ext + " (3).png")
+	} else {
+		for n := 0; n <= 3; n++ {
+			i := n % 2
+			j := n / 2
 			crop_rect := image.Rect(i * half_width, j * half_height, i * half_width + half_width, j * half_height + half_height)
-			results = append(results, img_as_croppable.SubImage(crop_rect))
+			err := write_png(img_as_croppable.SubImage(crop_rect), fmt.Sprintf("%v (%v).png", img_path_no_ext, n))
+			if err != nil {
+				return err
+			}
 		}
 	}
 
-	// Work out filename sans ".png"...
+	return nil
+}
 
-	filename := strings.TrimSuffix(fpath, ".png")
-
-	// Write...
-
-	for n, result := range results {
-		outfile, err := os.Create(fmt.Sprintf("%v (%v).png", filename, n))
-		if err != nil {
-			return err
-		}
-		defer outfile.Close()
-
-		err = png.Encode(outfile, result)
-		if err != nil {
-			return err
-		}
+func write_png(img image.Image, fpath string) error {
+	outfile, err := os.Create(fpath)
+	if err != nil {
+		return err
 	}
-
+	defer outfile.Close()
+	err = png.Encode(outfile, img)
+	if err != nil {
+		return err
+	}
 	return nil
 }
