@@ -237,7 +237,7 @@ func ParseRules(s string) []Rule {
 		}
 
 		if !ok2 {
-			if parts[4] == "HALT" {
+			if parts[4] == "HALT" {			// The only valid reason why this state isn't in the state_num_map.
 				new_state_num = -1
 			} else {
 				panic("Wat")
