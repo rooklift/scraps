@@ -215,9 +215,9 @@ func ParseRules(s string) []Rule {
 
 	// Lets say that, by default, everything halts...
 
-	for _, rule := range ret {
-		rule[0].NewState = -1
-		rule[1].NewState = -1
+	for i := 0; i < len(ret); i++ {			// Not using range, avoid the famous Go range gotcha...
+		ret[i][0].NewState = -1
+		ret[i][1].NewState = -1
 	}
 
 	// Now we can parse properly...
