@@ -190,13 +190,15 @@ func ParseRules(s string) []Rule {
 			continue
 		}
 		parts := strings.Split(line, ",")
+		if parts[1] == "HALT" {
+			panic("Defining actions for the HALT state is not allowed.")
+		}
+		if parts[4] == "HALT" {
+			halt_exists = true
+		}
 		for _, part := range []string{parts[1], parts[4]} {
-			if part == "HALT" {
-				halt_exists = true
-				continue
-			}
 			_, ok := state_num_map[part]
-			if !ok {
+			if !ok && part != "HALT" {
 				state_num_map[part] = len(state_num_map)
 			}
 		}
