@@ -8,6 +8,7 @@ import (
 )
 
 // Format: input bit, current state --> output bit, movement, new state or HALT.
+// Note that the first named state (here "A") will be the initial state.
 const RULES_STRING = `
 0,A,1,R,B
 1,A,1,L,C
@@ -196,10 +197,10 @@ func ParseRules(s string) []Rule {
 		if parts[4] == "HALT" {
 			halt_exists = true
 		}
-		for _, part := range []string{parts[1], parts[4]} {
-			_, ok := state_num_map[part]
-			if !ok && part != "HALT" {
-				state_num_map[part] = len(state_num_map)
+		for _, state := range []string{parts[1], parts[4]} {
+			_, ok := state_num_map[state]
+			if !ok && state != "HALT" {
+				state_num_map[state] = len(state_num_map)
 			}
 		}
 	}
