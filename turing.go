@@ -8,7 +8,9 @@ import (
 )
 
 // Format: input bit, current state --> output bit, movement, new state or HALT.
-// Note that the first named state (here "A") will be the initial state.
+// The state names will be converted to unique integers later.
+// The first named state (here "A") will be the initial state (state 0).
+
 const RULES_STRING = `
 0,A,1,R,B
 1,A,1,L,C
