@@ -3,6 +3,7 @@ package main
 // Flip a PNG image horizontally...
 
 import (
+	"bufio"
 	"image/color"
 	"fmt"
 	"image"
@@ -15,20 +16,28 @@ import (
 // Later we test for this by trying to type switch an image to the following...
 
 type Setter interface {
-	At(x, y int) color.Color
-	Bounds() image.Rectangle
-	ColorModel() color.Model
+	image.Image
 	Set(x, y int, c color.Color)
 }
 
 func main() {
 	args := os.Args[1:]
+	got_errs := false
 	for _, fpath := range args {
 		err := handle(fpath)
 		if err != nil {
 			fmt.Printf("%v\n", err)
+			got_errs = true
 		}
 	}
+	if got_errs {
+		get_input()
+	}
+}
+
+func get_input() {
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
 }
 
 func handle(fpath string) error {
