@@ -1,5 +1,7 @@
 import json, requests, sys
 
+speed_comments = True
+
 # -------------------------------------------------------------------------------------------------
 
 def result_string(o):
@@ -85,7 +87,13 @@ def make_move_nodes(o):
 		else:
 			coord = chr(move[0] + 97) + chr(move[1] + 97)
 
-		node = ";{}[{}]".format(colour, coord)
+		if speed_comments:
+			ms = int(move[2])
+			comment = "C[{:.2f} s]".format(ms / 1000)
+		else:
+			comment = ""
+
+		node = ";{}[{}]{}".format(colour, coord, comment)
 		move_string_elements.append(node)
 
 		if not o["gamedata"]["free_handicap_placement"] or len(move_string_elements) >= o["handicap"]:
