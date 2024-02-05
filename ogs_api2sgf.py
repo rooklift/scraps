@@ -1,6 +1,6 @@
 import json, requests, sys
 
-speed_comments = True
+speed_comments = False
 
 # -------------------------------------------------------------------------------------------------
 
@@ -115,5 +115,8 @@ url = "https://online-go.com/api/v1/games/{}".format(game_id)
 j = requests.get(url).json()
 
 print()
-print("(" + make_root(j) + make_move_nodes(j) + ")")
+if "error" in j:
+	print(j["error"])
+else:
+	print("(" + make_root(j) + make_move_nodes(j) + ")")
 print()
