@@ -67,13 +67,13 @@ func handle(fpath string) error {
 	app_basename := filepath.Base(os.Args[0])
 
 	if strings.Contains(app_basename, "top_left") {
-		return write_png(img_as_croppable.SubImage(image.Rect(0, 0, half_width, half_height)), img_path_no_ext + " (0).png")
+		return write_png(img_as_croppable.SubImage(image.Rect(0, 0, half_width, half_height)), img_path_no_ext + " (1).png")
 	} else if strings.Contains(app_basename, "top_right") {
-		return write_png(img_as_croppable.SubImage(image.Rect(half_width, 0, half_width * 2, half_height)), img_path_no_ext + " (1).png")
+		return write_png(img_as_croppable.SubImage(image.Rect(half_width, 0, half_width * 2, half_height)), img_path_no_ext + " (2).png")
 	} else if strings.Contains(app_basename, "bottom_left") {
-		return write_png(img_as_croppable.SubImage(image.Rect(0, half_height, half_width, half_height * 2)), img_path_no_ext + " (2).png")
+		return write_png(img_as_croppable.SubImage(image.Rect(0, half_height, half_width, half_height * 2)), img_path_no_ext + " (3).png")
 	} else if strings.Contains(app_basename, "bottom_right") {
-		return write_png(img_as_croppable.SubImage(image.Rect(half_width, half_height, half_width * 2, half_height * 2)), img_path_no_ext + " (3).png")
+		return write_png(img_as_croppable.SubImage(image.Rect(half_width, half_height, half_width * 2, half_height * 2)), img_path_no_ext + " (4).png")
 	} else {
 		for n := 0; n <= 3; n++ {
 			i := n % 2
