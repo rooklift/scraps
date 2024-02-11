@@ -1,8 +1,7 @@
-data = ".....OX.......OOX......OOXXOXXOXOXX.......OX..X..XXOX.X.....OOXX...XXO.OXXX.....OOXXXXXXXXOOXO...OOOXXXOOXOOXXOOO.OOOXOXXO.OOO.OOXOOX.XXXXXO.O..O..OXXOOXXOO.XO..O..O..OXXX.XXOOO.OO..OO.OOXXXXOOX...O.OOX.OOXXOXXXO..OOXXXXXXXXXOOOXO.....OXXOOOXXXOX.XOO....OX...XOOOOX.XOO....OXX..XXXOX...XXO...OXXO..XO.O....XOOX.OXOXXXOO.O...XXXO..OOOOXOOO.O...XOOO....OXXXXXO..."
-
-# Note the actual URL may use %23 for some reason
 
 alpha = "abcdefghijklmnopqrstuvwxyz"
+
+data = data.replace("%23", "X")		# Note the actual URL may use %23 for some reason
 
 AB = []
 AW = []
