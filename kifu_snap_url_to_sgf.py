@@ -1,7 +1,8 @@
+data = "......................X.......O.O........XOO..O.X.OX.OO......XXX.....O.XXO.....X.O..O.XXX........X.........O...O...XOO.......XO.........X................OXO..O.....O.X.....OX.XXO.........O...OX.OXO......O.XX...OX.XO..............OX..O...........X..OX........OOO.XX.XOOX.......XXXOX.OX.XXOOO.......XOOXOO..XXXO.O...O.XXOX...OX.XXO.......OXX......................"
 
 alpha = "abcdefghijklmnopqrstuvwxyz"
 
-data = data.replace("%23", "X")		# Note the actual URL may use %23 for some reason
+data = data.replace("%23", "X")		# Note the actual URL may use %23 for some reason (well - it's the hex code for #)
 
 AB = []
 AW = []
