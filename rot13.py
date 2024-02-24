@@ -10,17 +10,17 @@ def is_uppercase_char(c):	# specifically in the ASCII range
 	return isinstance(c, str) and (len(c) == 1) and c >= "A" and c <= "Z"
 
 def rot13(s):
-	ret = ""
+	chars = []
 	for c in s:
 		if is_lowercase_char(c):
 			i = ord(c) - 97
-			ret += rot_lower[i]
+			chars.append(rot_lower[i])
 		elif is_uppercase_char(c):
 			i = ord(c) - 65
-			ret += rot_upper[i]
+			chars.append(rot_upper[i])
 		else:
-			ret += c		# Horribly inefficient for big strings?
-	return ret
+			chars.append(c)
+	return "".join(chars)
 
 with open(sys.argv[-1], encoding="utf8") as infile:
 	for line in infile:
