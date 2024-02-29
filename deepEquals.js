@@ -22,7 +22,7 @@ function deepEquals(a, b) {
 		return false;
 	}
 	for (let key of a_keys) {
-		if (!Object.hasOwn(b, key)) {
+		if (!Object.prototype.hasOwnProperty.call(b, key)) {		// Object.hasOwn() is too new.
 			return false;
 		}
 		if (!deepEquals(a[key], b[key])) {
