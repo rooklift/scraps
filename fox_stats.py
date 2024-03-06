@@ -1,7 +1,7 @@
 import os
 import gofish2 as gf
 
-directories = ["Fox - fixme", "Fox - fixme2"]
+directories = ["Fox"]
 report_count = 2
 
 class Player:
@@ -58,6 +58,9 @@ def main():
 		files = os.listdir(directory)
 
 		for file in files:
+
+			if not file.lower().endswith(".sgf"):
+				continue
 
 			root = gf.load(os.path.join(directory, file))[0]
 
