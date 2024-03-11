@@ -2,7 +2,7 @@ import os
 import gofish2 as gf
 
 directories = ["Fox"]
-report_count = 2
+report_count = 4
 
 class Player:
 	def __init__(self, name):
@@ -30,8 +30,8 @@ class Player:
 		for key in keys:
 			print("* {}: {}-{}".format(key, self.wins.get(key, 0), self.losses.get(key, 0)))
 
-	def count_wins(self):
-		return sum(self.wins.values())
+	def count_games(self):
+		return sum(self.wins.values()) + sum(self.losses.values())
 
 
 def rank_value(s):
@@ -88,7 +88,7 @@ def main():
 				players[PB].add_loss_vs(WR)
 				players[PW].add_win_vs(BR)
 
-	interesting = sorted(list(players.values()), key = lambda x: x.count_wins(), reverse = True)
+	interesting = sorted(list(players.values()), key = lambda x: x.count_games(), reverse = True)
 
 	for player in interesting[0:report_count]:
 		player.print_stats()
