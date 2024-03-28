@@ -24,11 +24,12 @@ class Player:
 
 	def print_stats(self):
 		print()
-		print(self.name)
+		print(" {} ({})".format(self.name, self.count_games()))
+		print()
 		keys = set(self.wins.keys()).union(set(self.losses.keys()))
 		keys = sorted(list(keys), key = lambda x: rank_value(x), reverse = True)
 		for key in keys:
-			print("* {}: {}-{}".format(key, self.wins.get(key, 0), self.losses.get(key, 0)))
+			print("   {}: {}-{}".format(key, self.wins.get(key, 0), self.losses.get(key, 0)))
 
 	def count_games(self):
 		return sum(self.wins.values()) + sum(self.losses.values())
@@ -88,10 +89,14 @@ def main():
 				players[PB].add_loss_vs(WR)
 				players[PW].add_win_vs(BR)
 
-	interesting = sorted(list(players.values()), key = lambda x: x.count_games(), reverse = True)
+	interesting = sorted(list(players.values()), key = lambda x: [x.count_games() * -1, x.name])
+	interesting = interesting[0:report_count]
 
-	for player in interesting[0:report_count]:
+	for player in interesting:
 		player.print_stats()
+
+	print()
+	print(" TOTAL: {}".format(sum([player.count_games() for player in interesting])))
 
 
 
