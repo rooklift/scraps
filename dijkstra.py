@@ -68,12 +68,7 @@ def dijkstra(graph, start, end):		# THIS VERSION ACTUALLY WRITTEN BY ME BASED ON
 
 	# Step 1:
 
-	distances = dict()					# name --> dist from start
-
-	for item in graph:
-		distances[item[0]] = 999999999
-		distances[item[1]] = 999999999
-
+	distances = dict()					# name --> dist from start (not present = infinity)
 	distances[start] = 0
 
 	# Additional:
@@ -96,7 +91,7 @@ def dijkstra(graph, start, end):		# THIS VERSION ACTUALLY WRITTEN BY ME BASED ON
 		except IndexError:
 			return ((), -1)				# No path found.
 
-		if current in done:														# Step 3.1
+		if current in done:																# Step 3.1
 			continue
 
 		# Step 4:
@@ -108,12 +103,12 @@ def dijkstra(graph, start, end):		# THIS VERSION ACTUALLY WRITTEN BY ME BASED ON
 
 			distance = connections[current][neighbour]
 
-			dist_to_neighbour = dist_to_current + distance						# Step 4.1
+			dist_to_neighbour = dist_to_current + distance								# Step 4.1
 
-			if dist_to_neighbour < distances[neighbour]:						# Step 4.2
-				distances[neighbour] = dist_to_neighbour						# Step 4.3
-				previous[neighbour] = current									# Additional
-				heapq.heappush(consider_pq, (dist_to_neighbour, neighbour))		# Step 4.4
+			if neighbour not in distances or dist_to_neighbour < distances[neighbour]:	# Step 4.2
+				distances[neighbour] = dist_to_neighbour								# Step 4.3
+				previous[neighbour] = current											# Additional
+				heapq.heappush(consider_pq, (dist_to_neighbour, neighbour))				# Step 4.4
 
 		# Step 5:
 
