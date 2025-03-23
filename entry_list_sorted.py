@@ -1,14 +1,9 @@
-data = """
-1	Smith, Jim	6k	Footown	FR
-2	Jones, Joe	7k	Barville	UK
-"""
+import requests
 
-lines = [line.strip() for line in data.split("\n") if len(line.strip()) > 0]
 
 class Player:
 
-	def __init__(self, num, name, rank, club, country):
-		self.num = int(num)
+	def __init__(self, name, rank, club, country):
 		try:
 			self.forename = name.split(",")[1].strip()
 			self.surname = name.split(",")[0].strip()
@@ -40,22 +35,50 @@ class Player:
 				return 10 - numpart
 			else:
 				return 9 + numpart
-			
+
 	def __str__(self):
-		return "\t{0: >4}  {1: <22} {2}".format(self.rank, self.fullname(), self.club)
+		return "\t{0: >4}  {1: <26} {2}".format(self.rank, self.fullname(), self.club)
 
 	def __lt__(self, other):
 		return self.dist_to_10d() < other.dist_to_10d()
 
-players = []
 
-for line in lines:
-	num, name, rank, club, country = [token for token in line.split("\t") if token != ""]
-	players.append(Player(num, name, rank, club, country))
+def main(url):
 
-print()
-for item in sorted(players):
-	print(item)
-print()
-input()
+	html = requests.get(url).text
 
+	i1 = html.find("</thead>") + len("</thead>")
+	i2 = html.find("</table>")
+
+	table = html[i1:i2].strip()
+
+	table = table.replace("<td class=\"te_right\">", "<td>")
+	table = table.replace("<tr><td>", "")
+	table = table.replace("</td></tr>", "")
+
+	names = set()		# For deduplication
+	players = []
+	dupes = []
+
+	for line in table.split("\n"):
+		num, name, rank, club, country = line.split("</td><td>")
+		if num.isnumeric():
+			if name not in names:
+				players.append(Player(name, rank, club, country))
+				names.add(name)
+			else:
+				dupes.append(name)
+
+	players.sort()
+
+	print()
+	for p in players:
+		print(p)
+
+	print()
+	print("Dupes:", dupes)
+
+
+if __name__ == "__main__":
+	url = input("URL? ")
+	main(url)
