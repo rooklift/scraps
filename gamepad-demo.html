@@ -254,19 +254,19 @@
 						<div class="button" id="button5">R1</div>
 					</div>
 
-					<!-- Bottom row: L2, Start, A, B, R2 -->
+					<!-- Mid row: L2, ??, A, B, R2 -->
 					<div style="display: flex; justify-content: space-between; width: 100%; padding: 0 20px; box-sizing: border-box;">
 						<div class="button" id="button6">L2</div>
-						<div class="button" id="button9">Start</div>
+						<div class="button" id="button16">??</div> <!-- What to call this? -->
 						<div class="button" id="button0">A</div>
 						<div class="button" id="button1">B</div>
 						<div class="button" id="button7">R2</div>
 					</div>
 
-					<!-- L3 and R3 in their own row -->
+					<!-- Bottom row: L3, Start, R3 -->
 					<div style="display: flex; justify-content: space-between; width: 100%; padding: 0 20px; box-sizing: border-box;">
 						<div class="button" id="button10">L3</div>
-						<div style="width: 40px;"></div> <!-- Spacer -->
+						<div class="button" id="button9">Start</div>
 						<div style="width: 40px;"></div> <!-- Spacer -->
 						<div style="width: 40px;"></div> <!-- Spacer -->
 						<div class="button" id="button11">R3</div>
@@ -274,12 +274,12 @@
 				</div>
 
 				<!-- D-pad - centered at bottom -->
-				<div style="position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center;">
+				<div style="position: absolute; top: 20px; left: 0; right: 0; display: flex; justify-content: center;">
 					<div class="dpad-container">
-						<div class="dpad-button dpad-up" id="dpadUp"></div>
-						<div class="dpad-button dpad-right" id="dpadRight"></div>
-						<div class="dpad-button dpad-down" id="dpadDown"></div>
-						<div class="dpad-button dpad-left" id="dpadLeft"></div>
+						<div class="dpad-button dpad-up" id="button12"></div>
+						<div class="dpad-button dpad-right" id="button15"></div>
+						<div class="dpad-button dpad-down" id="button13"></div>
+						<div class="dpad-button dpad-left" id="button14"></div>
 					</div>
 				</div>
 			</div>
@@ -373,18 +373,12 @@
 			triggerRValue.style.width = '0%';
 
 			// Reset buttons
-			for (let i = 0; i < 12; i++) {
+			for (let i = 0; i <= 16; i++) {
 				const buttonElement = document.getElementById(`button${i}`);
 				if (buttonElement) {
 					buttonElement.classList.remove('active');
 				}
 			}
-
-			// Reset D-pad
-			document.getElementById('dpadUp').classList.remove('active');
-			document.getElementById('dpadRight').classList.remove('active');
-			document.getElementById('dpadDown').classList.remove('active');
-			document.getElementById('dpadLeft').classList.remove('active');
 
 			// Reset raw data
 			rawDataElement.textContent = 'No data available';
@@ -408,7 +402,7 @@
 
 				const axesData = Array.from(gamepad.axes)
 					.map((axis, i) => ({index: i, value: axis}))
-					.filter(axis => Math.abs(axis.value) > 0.05) // Filter out very small values (dead zone)
+					.filter(axis => Math.abs(axis.value) > 0.0) // Could use a small value to filter out very small values (dead zone)
 					.map(axis => `Axis ${axis.index}: ${axis.value.toFixed(4)}`)
 					.join('\n');
 
@@ -444,7 +438,7 @@
 				}
 
 				// Update face buttons (A, B, X, Y, etc.)
-				for (let i = 0; i < Math.min(gamepad.buttons.length, 12); i++) {
+				for (let i = 0; i <= Math.min(gamepad.buttons.length - 1, 16); i++) {
 					const buttonElement = document.getElementById(`button${i}`);
 					if (buttonElement) {
 						if (gamepad.buttons[i].pressed) {
@@ -452,39 +446,6 @@
 						} else {
 							buttonElement.classList.remove('active');
 						}
-					}
-				}
-
-				// D-pad using buttons 12-15 (fixed mapping based on controller data)
-				if (gamepad.buttons.length >= 16) {
-					const dpadUp = document.getElementById('dpadUp');
-					const dpadRight = document.getElementById('dpadRight');
-					const dpadDown = document.getElementById('dpadDown');
-					const dpadLeft = document.getElementById('dpadLeft');
-
-					// Apply active class directly based on button presses
-					if (gamepad.buttons[12] && gamepad.buttons[12].pressed) {
-						dpadUp.classList.add('active');
-					} else {
-						dpadUp.classList.remove('active');
-					}
-
-					if (gamepad.buttons[15] && gamepad.buttons[15].pressed) {
-						dpadRight.classList.add('active');
-					} else {
-						dpadRight.classList.remove('active');
-					}
-
-					if (gamepad.buttons[13] && gamepad.buttons[13].pressed) {
-						dpadDown.classList.add('active');
-					} else {
-						dpadDown.classList.remove('active');
-					}
-
-					if (gamepad.buttons[14] && gamepad.buttons[14].pressed) {
-						dpadLeft.classList.add('active');
-					} else {
-						dpadLeft.classList.remove('active');
 					}
 				}
 			}
