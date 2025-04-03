@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Gamepad Input Visualizer - by Claude</title>
+	<style>
+		html {
+			overflow-y: scroll; /* Force scrollbar to always be visible */
+		}
+		body {
+			font-family: Arial, sans-serif;
+			max-width: 900px;
+			margin: 0 auto;
+			padding: 20px;
+			background-color: #f5f5f5;
+		}
+		.container {
+			background-color: white;
+			border-radius: 8px;
+			padding: 20px;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+		}
+		h1 {
+			color: #333;
+			text-align: center;
+			margin-bottom: 30px;
+		}
+		.status {
+			font-size: 18px;
+			text-align: center;
+			margin-bottom: 20px;
+			padding: 10px;
+			border-radius: 4px;
+		}
+		.connected {
+			background-color: #d4edda;
+			color: #155724;
+		}
+		.disconnected {
+			background-color: #f8d7da;
+			color: #721c24;
+		}
+		.gamepad-container {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 20px;
+			margin-bottom: 20px;
+		}
+		.gamepad-info {
+			flex: 1;
+			min-width: 250px;
+		}
+		.gamepad-visual {
+			flex: 2;
+			min-width: 400px;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			padding: 10px;
+			position: relative;
+			height: 400px; /* Increased height */
+		}
+		.stick {
+			position: absolute;
+			width: 100px;
+			height: 100px;
+			border-radius: 50%;
+			border: 2px solid #333;
+			background-color: #eee;
+		}
+		.stick-left {
+			left: 50px;
+			top: 50px;
+		}
+		.stick-right {
+			right: 50px;
+			top: 50px;
+		}
+		.stick-dot {
+			position: absolute;
+			width: 20px;
+			height: 20px;
+			background-color: #333;
+			border-radius: 50%;
+			top: 40px;
+			left: 40px;
+			transition: all 0.05s ease-out;
+		}
+		.controls-row {
+			position: absolute;
+			display: flex;
+			justify-content: space-between;
+			width: 100%;
+			padding: 0 20px;
+			box-sizing: border-box;
+		}
+		.triggers-row {
+			top: 15px;
+		}
+		.buttons-row {
+			top: 180px;
+			justify-content: center;
+			gap: 20px;
+		}
+		.dpad-row {
+			top: 270px; /* Moved down */
+		}
+		.dpad-container {
+			position: relative;
+			width: 110px;
+			height: 110px;
+		}
+		.face-buttons {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			grid-template-rows: repeat(2, 1fr);
+			gap: 10px;
+			width: 110px;
+			height: 110px;
+		}
+		.shoulder-buttons {
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+		}
+		.center-buttons {
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+			align-items: center;
+		}
+		.trigger {
+			width: 80px;
+			height: 20px;
+			background-color: #eee;
+			border: 2px solid #333;
+			border-radius: 4px;
+			text-align: center;
+			position: relative;
+		}
+		.trigger-value {
+			height: 100%;
+			background-color: #28a745;
+			border-radius: 2px;
+			width: 0%;
+			transition: width 0.05s ease-out;
+		}
+		.button {
+			width: 40px;
+			height: 40px;
+			border-radius: 50%;
+			background-color: #eee;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-weight: bold;
+			border: 2px solid #333;
+		}
+		.active {
+			background-color: #28a745;
+			color: white;
+		}
+		.dpad-button {
+			position: absolute;
+			width: 30px;
+			height: 30px;
+			background-color: #eee;
+			border: 2px solid #333;
+		}
+		.dpad-button.active {
+			background-color: #28a745;
+			color: white;
+		}
+		.dpad-up {
+			top: 0;
+			left: 40px;
+			border-radius: 4px 4px 0 0;
+		}
+		.dpad-right {
+			top: 40px;
+			right: 0;
+			border-radius: 0 4px 4px 0;
+		}
+		.dpad-down {
+			bottom: 0;
+			left: 40px;
+			border-radius: 0 0 4px 4px;
+		}
+		.dpad-left {
+			top: 40px;
+			left: 0;
+			border-radius: 4px 0 0 4px;
+		}
+		.raw-data {
+			margin-top: 20px;
+			border-top: 1px solid #ddd;
+			padding-top: 20px;
+		}
+		pre {
+			background-color: #f8f9fa;
+			padding: 10px;
+			border-radius: 4px;
+			overflow-x: auto;
+			max-height: 200px;
+			font-size: 14px;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+
+		<div id="gamepadStatus" class="status disconnected">
+			No gamepad detected
+		</div>
+
+		<div class="gamepad-container">
+			<div class="gamepad-info">
+				<h2>Gamepad Information</h2>
+				<div id="gamepadInfo">
+					<p>ID: N/A</p>
+					<p>Buttons: 0</p>
+					<p>Axes: 0</p>
+				</div>
+			</div>
+
+			<div class="gamepad-visual">
+				<!-- Triggers at top -->
+				<div class="controls-row triggers-row">
+					<div class="trigger" id="triggerL">
+						<div class="trigger-value" id="triggerLValue"></div>
+					</div>
+					<div class="trigger" id="triggerR">
+						<div class="trigger-value" id="triggerRValue"></div>
+					</div>
+				</div>
+
+				<!-- Analog sticks -->
+				<div class="stick stick-left">
+					<div class="stick-dot" id="leftStickDot"></div>
+				</div>
+
+				<div class="stick stick-right">
+					<div class="stick-dot" id="rightStickDot"></div>
+				</div>
+
+				<!-- Reorganized buttons into two rows -->
+				<div style="position: absolute; top: 180px; left: 0; right: 0; display: flex; flex-direction: column; gap: 20px;">
+					<!-- Top row: L1, Sel, X, Y, R1 -->
+					<div style="display: flex; justify-content: space-between; width: 100%; padding: 0 20px; box-sizing: border-box;">
+						<div class="button" id="button4">L1</div>
+						<div class="button" id="button8">Sel</div>
+						<div class="button" id="button2">X</div>
+						<div class="button" id="button3">Y</div>
+						<div class="button" id="button5">R1</div>
+					</div>
+
+					<!-- Bottom row: L2, Start, A, B, R2 -->
+					<div style="display: flex; justify-content: space-between; width: 100%; padding: 0 20px; box-sizing: border-box;">
+						<div class="button" id="button6">L2</div>
+						<div class="button" id="button9">Start</div>
+						<div class="button" id="button0">A</div>
+						<div class="button" id="button1">B</div>
+						<div class="button" id="button7">R2</div>
+					</div>
+
+					<!-- L3 and R3 in their own row -->
+					<div style="display: flex; justify-content: space-between; width: 100%; padding: 0 20px; box-sizing: border-box;">
+						<div class="button" id="button10">L3</div>
+						<div style="width: 40px;"></div> <!-- Spacer -->
+						<div style="width: 40px;"></div> <!-- Spacer -->
+						<div style="width: 40px;"></div> <!-- Spacer -->
+						<div class="button" id="button11">R3</div>
+					</div>
+				</div>
+
+				<!-- D-pad - centered at bottom -->
+				<div style="position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center;">
+					<div class="dpad-container">
+						<div class="dpad-button dpad-up" id="dpadUp"></div>
+						<div class="dpad-button dpad-right" id="dpadRight"></div>
+						<div class="dpad-button dpad-down" id="dpadDown"></div>
+						<div class="dpad-button dpad-left" id="dpadLeft"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="raw-data">
+			<h2>Raw Gamepad Data</h2>
+			<pre id="rawData">No data available</pre>
+		</div>
+	</div>
+
+	<script>
+		let gamepads = {};
+		let activeGamepad = null;
+		const statusElement = document.getElementById('gamepadStatus');
+		const gamepadInfoElement = document.getElementById('gamepadInfo');
+		const rawDataElement = document.getElementById('rawData');
+		const leftStickDot = document.getElementById('leftStickDot');
+		const rightStickDot = document.getElementById('rightStickDot');
+		const triggerLValue = document.getElementById('triggerLValue');
+		const triggerRValue = document.getElementById('triggerRValue');
+
+		// Handle gamepad connection
+		window.addEventListener("gamepadconnected", (e) => {
+			const gamepad = e.gamepad;
+			gamepads[gamepad.index] = gamepad;
+			activeGamepad = gamepad;
+
+			statusElement.textContent = `Gamepad connected: ${gamepad.id}`;
+			statusElement.classList.remove('disconnected');
+			statusElement.classList.add('connected');
+
+			updateGamepadInfo(gamepad);
+
+			if (!animationFrameId) {
+				animationFrameId = requestAnimationFrame(updateGamepadDisplay);
+			}
+		});
+
+		// Handle gamepad disconnection
+		window.addEventListener("gamepaddisconnected", (e) => {
+			delete gamepads[e.gamepad.index];
+
+			// Check if we have any other gamepads connected
+			const remainingGamepads = Object.values(gamepads);
+			if (remainingGamepads.length > 0) {
+				activeGamepad = remainingGamepads[0];
+				statusElement.textContent = `Gamepad connected: ${activeGamepad.id}`;
+			} else {
+				activeGamepad = null;
+				statusElement.textContent = 'No gamepad detected';
+				statusElement.classList.remove('connected');
+				statusElement.classList.add('disconnected');
+
+				// Reset the display
+				updateGamepadInfo(null);
+				resetVisualElements();
+
+				if (animationFrameId) {
+					cancelAnimationFrame(animationFrameId);
+					animationFrameId = null;
+				}
+			}
+		});
+
+		function updateGamepadInfo(gamepad) {
+			if (!gamepad) {
+				gamepadInfoElement.innerHTML = `
+					<p>ID: N/A</p>
+					<p>Buttons: 0</p>
+					<p>Axes: 0</p>
+				`;
+				return;
+			}
+
+			gamepadInfoElement.innerHTML = `
+				<p>ID: ${gamepad.id}</p>
+				<p>Buttons: ${gamepad.buttons.length}</p>
+				<p>Axes: ${gamepad.axes.length}</p>
+				<p>Mapping: ${gamepad.mapping}</p>
+			`;
+		}
+
+		function resetVisualElements() {
+			// Reset stick positions
+			leftStickDot.style.transform = `translate(0px, 0px)`;
+			rightStickDot.style.transform = `translate(0px, 0px)`;
+
+			// Reset trigger values
+			triggerLValue.style.width = '0%';
+			triggerRValue.style.width = '0%';
+
+			// Reset buttons
+			for (let i = 0; i < 12; i++) {
+				const buttonElement = document.getElementById(`button${i}`);
+				if (buttonElement) {
+					buttonElement.classList.remove('active');
+				}
+			}
+
+			// Reset D-pad
+			document.getElementById('dpadUp').classList.remove('active');
+			document.getElementById('dpadRight').classList.remove('active');
+			document.getElementById('dpadDown').classList.remove('active');
+			document.getElementById('dpadLeft').classList.remove('active');
+
+			// Reset raw data
+			rawDataElement.textContent = 'No data available';
+		}
+
+		let animationFrameId = null;
+
+		function updateGamepadDisplay() {
+			// Get the latest gamepad state
+			const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+
+			if (activeGamepad && gamepads[activeGamepad.index]) {
+				const gamepad = gamepads[activeGamepad.index];
+
+				// Update raw data display - filter out zero values
+				const buttonsData = Array.from(gamepad.buttons)
+					.map((btn, i) => ({index: i, value: btn.value, pressed: btn.pressed}))
+					.filter(btn => btn.value > 0 || btn.pressed)
+					.map(btn => `Button ${btn.index}: ${btn.pressed ? 'Pressed' : 'Released'} (${btn.value.toFixed(2)})`)
+					.join('\n');
+
+				const axesData = Array.from(gamepad.axes)
+					.map((axis, i) => ({index: i, value: axis}))
+					.filter(axis => Math.abs(axis.value) > 0.05) // Filter out very small values (dead zone)
+					.map(axis => `Axis ${axis.index}: ${axis.value.toFixed(4)}`)
+					.join('\n');
+
+				// Show a message if no buttons or axes are active
+				const buttonsOutput = buttonsData || "No buttons pressed";
+				const axesOutput = axesData || "No axes active";
+
+				rawDataElement.textContent = `${buttonsOutput}\n\n${axesOutput}`;
+
+				// Update visual elements
+
+				// Left stick (typically axes 0 and 1)
+				if (gamepad.axes.length >= 2) {
+					const lx = gamepad.axes[0] * 40; // Scale to our visual
+					const ly = gamepad.axes[1] * 40;
+					leftStickDot.style.transform = `translate(${lx}px, ${ly}px)`;
+				}
+
+				// Right stick (typically axes 2 and 3)
+				if (gamepad.axes.length >= 4) {
+					const rx = gamepad.axes[2] * 40;
+					const ry = gamepad.axes[3] * 40;
+					rightStickDot.style.transform = `translate(${rx}px, ${ry}px)`;
+				}
+
+				// Triggers (buttons 6 and 7 on many controllers)
+				if (gamepad.buttons.length >= 7) {
+					triggerLValue.style.width = `${gamepad.buttons[6].value * 100}%`;
+				}
+
+				if (gamepad.buttons.length >= 8) {
+					triggerRValue.style.width = `${gamepad.buttons[7].value * 100}%`;
+				}
+
+				// Update face buttons (A, B, X, Y, etc.)
+				for (let i = 0; i < Math.min(gamepad.buttons.length, 12); i++) {
+					const buttonElement = document.getElementById(`button${i}`);
+					if (buttonElement) {
+						if (gamepad.buttons[i].pressed) {
+							buttonElement.classList.add('active');
+						} else {
+							buttonElement.classList.remove('active');
+						}
+					}
+				}
+
+				// D-pad using buttons 12-15 (fixed mapping based on controller data)
+				if (gamepad.buttons.length >= 16) {
+					const dpadUp = document.getElementById('dpadUp');
+					const dpadRight = document.getElementById('dpadRight');
+					const dpadDown = document.getElementById('dpadDown');
+					const dpadLeft = document.getElementById('dpadLeft');
+
+					// Apply active class directly based on button presses
+					if (gamepad.buttons[12] && gamepad.buttons[12].pressed) {
+						dpadUp.classList.add('active');
+					} else {
+						dpadUp.classList.remove('active');
+					}
+
+					if (gamepad.buttons[15] && gamepad.buttons[15].pressed) {
+						dpadRight.classList.add('active');
+					} else {
+						dpadRight.classList.remove('active');
+					}
+
+					if (gamepad.buttons[13] && gamepad.buttons[13].pressed) {
+						dpadDown.classList.add('active');
+					} else {
+						dpadDown.classList.remove('active');
+					}
+
+					if (gamepad.buttons[14] && gamepad.buttons[14].pressed) {
+						dpadLeft.classList.add('active');
+					} else {
+						dpadLeft.classList.remove('active');
+					}
+				}
+			}
+
+			animationFrameId = requestAnimationFrame(updateGamepadDisplay);
+		}
+	</script>
+</body>
+</html>
