@@ -110,6 +110,45 @@
 			width: 110px;
 			height: 110px;
 		}
+		.dpad-button {
+			position: absolute;
+			width: 30px;
+			height: 30px;
+			background-color: #eee;
+			border: 2px solid #333;
+		}
+		.dpad-button.active {
+			background-color: #28a745;
+			color: white;
+		}
+		/* Position exactly at center top */
+		.dpad-up {
+			top: 0;
+			left: 50%;
+			transform: translateX(-50%);
+			border-radius: 4px 4px 0 0;
+		}
+		/* Position exactly at center right */
+		.dpad-right {
+			top: 50%;
+			right: 0;
+			transform: translateY(-50%);
+			border-radius: 0 4px 4px 0;
+		}
+		/* Position exactly at center bottom */
+		.dpad-down {
+			bottom: 0;
+			left: 50%;
+			transform: translateX(-50%);
+			border-radius: 0 0 4px 4px;
+		}
+		/* Position exactly at center left */
+		.dpad-left {
+			top: 50%;
+			left: 0;
+			transform: translateY(-50%);
+			border-radius: 4px 0 0 4px;
+		}
 		.face-buttons {
 			display: grid;
 			grid-template-columns: repeat(2, 1fr);
@@ -159,37 +198,6 @@
 		.active {
 			background-color: #28a745;
 			color: white;
-		}
-		.dpad-button {
-			position: absolute;
-			width: 30px;
-			height: 30px;
-			background-color: #eee;
-			border: 2px solid #333;
-		}
-		.dpad-button.active {
-			background-color: #28a745;
-			color: white;
-		}
-		.dpad-up {
-			top: 0;
-			left: 40px;
-			border-radius: 4px 4px 0 0;
-		}
-		.dpad-right {
-			top: 40px;
-			right: 0;
-			border-radius: 0 4px 4px 0;
-		}
-		.dpad-down {
-			bottom: 0;
-			left: 40px;
-			border-radius: 0 0 4px 4px;
-		}
-		.dpad-left {
-			top: 40px;
-			left: 0;
-			border-radius: 4px 0 0 4px;
 		}
 		.raw-data {
 			margin-top: 20px;
@@ -254,10 +262,10 @@
 						<div class="button" id="button5">R1</div>
 					</div>
 
-					<!-- Mid row: L2, ??, A, B, R2 -->
+					<!-- Mid row: L2, Xbox, A, B, R2 -->
 					<div style="display: flex; justify-content: space-between; width: 100%; padding: 0 20px; box-sizing: border-box;">
 						<div class="button" id="button6">L2</div>
-						<div class="button" id="button16">??</div> <!-- What to call this? -->
+						<div class="button" id="button16">Xbox</div> <!-- What to call this? -->
 						<div class="button" id="button0">A</div>
 						<div class="button" id="button1">B</div>
 						<div class="button" id="button7">R2</div>
