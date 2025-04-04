@@ -254,29 +254,29 @@
 				<div style="position: absolute; top: 180px; left: 0; right: 0; display: flex; flex-direction: column; gap: 20px;">
 					<!-- Top row: L1, Sel, X, Y, R1 -->
 					<div style="display: flex; justify-content: space-between; width: 100%; padding: 0 20px; box-sizing: border-box;">
-						<div class="button" id="button4">L1</div>
-						<div class="button" id="button8">Sel</div>
-						<div class="button" id="button2">X</div>
-						<div class="button" id="button3">Y</div>
-						<div class="button" id="button5">R1</div>
+						<div class="button" id="button4">??</div>
+						<div class="button" id="button8">??</div>
+						<div class="button" id="button2">??</div>
+						<div class="button" id="button3">??</div>
+						<div class="button" id="button5">??</div>
 					</div>
 
 					<!-- Mid row: L2, Xbox, A, B, R2 -->
 					<div style="display: flex; justify-content: space-between; width: 100%; padding: 0 20px; box-sizing: border-box;">
-						<div class="button" id="button6">L2</div>
-						<div class="button" id="button16">Xbox</div> <!-- What to call this? -->
-						<div class="button" id="button0">A</div>
-						<div class="button" id="button1">B</div>
-						<div class="button" id="button7">R2</div>
+						<div class="button" id="button6">??</div>
+						<div class="button" id="button16">??</div>
+						<div class="button" id="button0">??</div>
+						<div class="button" id="button1">??</div>
+						<div class="button" id="button7">??</div>
 					</div>
 
 					<!-- Bottom row: L3, Start, R3 -->
 					<div style="display: flex; justify-content: space-between; width: 100%; padding: 0 20px; box-sizing: border-box;">
-						<div class="button" id="button10">L3</div>
-						<div class="button" id="button9">Start</div>
+						<div class="button" id="button10">??</div>
+						<div class="button" id="button9">??</div>
 						<div style="width: 40px;"></div> <!-- Spacer -->
 						<div style="width: 40px;"></div> <!-- Spacer -->
-						<div class="button" id="button11">R3</div>
+						<div class="button" id="button11">??</div>
 					</div>
 				</div>
 
@@ -301,6 +301,8 @@
 	<script>
 		let gamepads = {};
 		let activeGamepad = null;
+		let show_names = false;
+		let animationFrameId = null;
 		const statusElement = document.getElementById('gamepadStatus');
 		const gamepadInfoElement = document.getElementById('gamepadInfo');
 		const rawDataElement = document.getElementById('rawData');
@@ -308,6 +310,7 @@
 		const rightStickDot = document.getElementById('rightStickDot');
 		const triggerLValue = document.getElementById('triggerLValue');
 		const triggerRValue = document.getElementById('triggerRValue');
+		const bnames = ["A", "B", "X", "Y", "LB", "RB", "LT", "RT", "Sel", "Start", "LS", "RS", "", "", "", "", "Home"];
 
 		// Handle gamepad connection
 		window.addEventListener("gamepadconnected", (e) => {
@@ -352,6 +355,16 @@
 			}
 		});
 
+		function toggle_names() {
+			show_names = !show_names
+			for (let n = 0; n < bnames.length; n++) {
+				let e = document.getElementById(`button${n}`);
+				if (e) {
+					e.innerHTML = show_names ? bnames[n] : n.toString();
+				}
+			}
+		}
+
 		function updateGamepadInfo(gamepad) {
 			if (!gamepad) {
 				gamepadInfoElement.innerHTML = `
@@ -367,7 +380,12 @@
 				<p>Buttons: ${gamepad.buttons.length}</p>
 				<p>Axes: ${gamepad.axes.length}</p>
 				<p>Mapping: ${gamepad.mapping}</p>
+				<button id="toggler">Toggle labels</button>
 			`;
+
+			document.getElementById("toggler").addEventListener("mousedown", () => {
+				toggle_names();
+			});
 		}
 
 		function resetVisualElements() {
@@ -390,8 +408,6 @@
 			// Reset raw data
 			rawDataElement.textContent = 'No data available';
 		}
-
-		let animationFrameId = null;
 
 		function updateGamepadDisplay() {
 			// Get the latest gamepad state
@@ -459,6 +475,9 @@
 
 			animationFrameId = requestAnimationFrame(updateGamepadDisplay);
 		}
+
+		toggle_names();
+
 	</script>
 </body>
 </html>
