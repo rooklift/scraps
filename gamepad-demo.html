@@ -86,16 +86,15 @@
 			left: 40px;
 			transition: all 0.05s ease-out;
 		}
-		.controls-row {
+		.triggers-row {
 			position: absolute;
 			display: flex;
 			justify-content: space-between;
-			width: 100%;
-			padding: 0 20px;
+			padding: 0 20px; /* Keep this for spacing triggers */
 			box-sizing: border-box;
-		}
-		.triggers-row {
 			top: 15px;
+			left: 0;
+			right: 0;
 		}
 		.buttons-row {
 			top: 180px;
@@ -233,7 +232,7 @@
 
 			<div class="gamepad-visual">
 				<!-- Triggers at top -->
-				<div class="controls-row triggers-row">
+				<div class="triggers-row">
 					<div class="trigger" id="triggerL">
 						<div class="trigger-value" id="triggerLValue"></div>
 					</div>
