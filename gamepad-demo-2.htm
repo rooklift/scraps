@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Xbox Controller Tester - by Optimus</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #191920;
+      color: #e0e3e6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      margin-top: 24px;
+      letter-spacing: 1px;
+    }
+    #not-connected {
+      color: #ff6868;
+      font-weight: bold;
+      margin: 40px;
+    }
+    #tester {
+      margin: 30px 0;
+      background: #242431;
+      border-radius: 18px;
+      padding: 32px 28px 28px 28px;
+      box-shadow: 0 8px 40px #0008;
+      min-width: 352px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+    .row {
+      display: flex;
+      gap: 44px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .axes-visual, .buttons-table {
+      padding: 0 7px;
+    }
+    .axes-visual {
+      width: 190px;
+      min-width: 140px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .stick-visual {
+      background: #101017;
+      border-radius: 60px;
+      margin: 16px auto 0 auto;
+      width: 72px; height: 72px;
+      position: relative;
+      border: 2px solid #303048;
+    }
+    .stick-dot {
+      position: absolute;
+      width: 26px; height: 26px;
+      margin-left: -13px;
+      margin-top: -13px;
+      top: 50%; left: 50%;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6dc0ff 60%, #0cf 100%);
+      box-shadow: 0 0 6px 2px #56eaff88;
+      pointer-events: none;
+    }
+    .trigger-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+    .trigger-bar {
+      background: #2a2a38;
+      border-radius: 4px;
+      width: 72px;
+      height: 14px;
+      margin-top: 7px;
+      overflow: hidden;
+      display: block;
+    }
+    .trigger-fill {
+      height: 100%;
+      transition: width 0.1s;
+      background: linear-gradient(90deg, #d6f635 40%, #50fa67 100%);
+      border-radius: 4px;
+    }
+    .trigger-value {
+      font-size: 0.91em;
+      color: #ffe152a2;
+      margin-top: 3px;
+      text-align: center;
+      width: 72px;
+    }
+
+    table.buttons-table {
+      border-collapse: collapse;
+      width: 320px;
+      font-size: 0.98em;
+      background: #191926;
+      border-radius: 8px;
+      box-shadow: 0 0 6px #1af4;
+      margin: 0 auto;
+      table-layout: fixed;
+    }
+    .buttons-table col { }
+    .buttons-table col.bname { width: 56%; }
+    .buttons-table col.bindex { width: 16%; }
+    .buttons-table col.bstate { width: 28%; }
+    .buttons-table tr { border-bottom: 1px solid #22223b; }
+    .buttons-table th, .buttons-table td {
+      padding: 5px 13px;
+      text-align: left;
+      font-weight: 500;
+      min-width: 60px;
+      transition: background 0.07s, color 0.07s;
+      box-sizing: border-box;
+      word-break: break-word;
+    }
+    .buttons-table th { min-width: unset; }
+    .pressed {
+      background: #1eeb86a8 !important;
+      color: #042 !important;
+    }
+    .unpressed { color: #bbb; }
+    .btn-index {
+      opacity: 0.7;
+      font-size: 0.85em;
+      letter-spacing: 0.5px;
+      width: 28px;
+      display: inline-block;
+    }
+    .axis-num {
+      font-family: 'Fira Mono', 'Consolas', 'Menlo', monospace;
+      background: #232338;
+      padding: 1px 6px 1px 6px;
+      border-radius: 4px;
+      min-width: 49px;
+      display: inline-block;
+      text-align: center;
+      letter-spacing: 1px;
+      font-size: 1em;
+      box-sizing: border-box;
+    }
+    .footer-note {
+      color: #888;
+      font-size: 0.95em;
+      margin: 16px 0 10px 0;
+      text-align: center;
+      opacity: 0.84;
+      letter-spacing: 0.15px;
+    }
+    @media (max-width: 600px) {
+      #tester { min-width: unset; padding: 12px 2vw 15px 2vw; }
+      .row { gap: 13px;}
+      .axes-visual { width: 98vw; }
+      .buttons-table { width: 99vw; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Xbox Controller Tester</h1>
+  <div id="not-connected">Connect any Xbox (or Xbox-like) controller, then press any button.</div>
+  <div id="tester" style="display:none;">
+    <div><span>Controller: </span><span id="pad-name" style="font-weight:bold;"></span></div>
+    <div class="row">
+      <div class="axes-visual">
+        <div style="text-align:center;font-weight:bold;">Left Stick</div>
+        <div id="left-stick" class="stick-visual"><div class="stick-dot"></div></div>
+        <div style="font-size:0.92em;color:#aaf;">
+          X:<span id="ls-x" class="axis-num"></span>
+          Y:<span id="ls-y" class="axis-num"></span>
+        </div>
+        <div class="trigger-container" style="margin-top:14px;">
+          <div style="text-align:center;font-weight:bold;">LT Trigger</div>
+          <div class="trigger-bar"><div id="lt-fill" class="trigger-fill"></div></div>
+          <div class="trigger-value">Value: <span id="lt-value"></span></div>
+        </div>
+      </div>
+      <div class="axes-visual">
+        <div style="text-align:center;font-weight:bold;">Right Stick</div>
+        <div id="right-stick" class="stick-visual"><div class="stick-dot"></div></div>
+        <div style="font-size:0.92em;color:#aaf;">
+          X:<span id="rs-x" class="axis-num"></span>
+          Y:<span id="rs-y" class="axis-num"></span>
+        </div>
+        <div class="trigger-container" style="margin-top:14px;">
+          <div style="text-align:center;font-weight:bold;">RT Trigger</div>
+          <div class="trigger-bar"><div id="rt-fill" class="trigger-fill"></div></div>
+          <div class="trigger-value">Value: <span id="rt-value"></span></div>
+        </div>
+      </div>
+    </div>
+    <table class="buttons-table">
+      <colgroup>
+        <col class="bname">
+        <col class="bindex">
+        <col class="bstate">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Button</th><th>i</th><th>State</th>
+        </tr>
+      </thead>
+      <tbody id="btn-tbody"></tbody>
+    </table>
+  </div>
+  <div class="footer-note">
+    Powered by the browser's <b>Gamepad API</b>. For best results, use Chrome or Edge.<br>
+    Test: Thumbsticks, triggers (LT/RT), bumpers (LB/RB), D-pad, ABXY, menu/view buttons and both stick clicks.
+  </div>
+  <script>
+    // Button name mappings for typical Xbox/Xinput layout:
+    const btnNames = [
+      'A', 'B', 'X', 'Y',
+      'LB', 'RB', 'LT', 'RT',
+      'Back', 'Start', 'L Stick', 'R Stick',
+      'Dpad Up', 'Dpad Down', 'Dpad Left', 'Dpad Right',
+      'Guide'
+    ];
+    function getButtonName(idx) {
+      if (idx < btnNames.length) return btnNames[idx];
+      return 'Button ' + idx;
+    }
+    // UI elements
+    const tester = document.getElementById('tester');
+    const notConn = document.getElementById('not-connected');
+    const padName = document.getElementById('pad-name');
+    const btnTbody = document.getElementById('btn-tbody');
+    // Left stick visual
+    const ls = document.getElementById('left-stick');
+    const lsDot = ls.querySelector('.stick-dot');
+    const lsx = document.getElementById('ls-x'), lsy = document.getElementById('ls-y');
+    // Right stick
+    const rs = document.getElementById('right-stick');
+    const rsDot = rs.querySelector('.stick-dot');
+    const rsx = document.getElementById('rs-x'), rsy = document.getElementById('rs-y');
+    // Triggers
+    const ltfill = document.getElementById('lt-fill');
+    const rtfill = document.getElementById('rt-fill');
+    const ltval = document.getElementById('lt-value');
+    const rtval = document.getElementById('rt-value');
+
+    let activePadIdx = null;
+
+    function formatAxis(val, digits=2) {
+      let s = (val>=0?'+':'') + val.toFixed(digits);
+      if (s.length < 6) s = s.padEnd(6, ' ');
+      return s;
+    }
+
+    function renderGamepad(pad) {
+      padName.textContent = pad.id || '(unknown)';
+      // STICKS: axes[0,1]=LS X/Y; axes[2,3]=RS X/Y.
+      let lsX = pad.axes[0] || 0, lsY = pad.axes[1] || 0;
+      let rsX = pad.axes[2] || 0, rsY = pad.axes[3] || 0;
+      // Stick dots
+      lsDot.style.left = (50 + lsX*28) + '%';
+      lsDot.style.top = (50 + lsY*28) + '%';
+      rsDot.style.left = (50 + rsX*28) + '%';
+      rsDot.style.top = (50 + rsY*28) + '%';
+      // Text values (monospace!)
+      lsx.textContent = formatAxis(lsX);
+      lsy.textContent = formatAxis(lsY);
+      rsx.textContent = formatAxis(rsX);
+      rsy.textContent = formatAxis(rsY);
+
+      // Triggers: buttons 6 (LT), 7 (RT)
+      const lt = pad.buttons[6]?.value ?? 0, rt = pad.buttons[7]?.value ?? 0;
+      ltfill.style.width = (lt*100).toFixed(0)+'%';
+      rtfill.style.width = (rt*100).toFixed(0)+'%';
+      ltval.textContent = lt.toFixed(2);
+      rtval.textContent = rt.toFixed(2);
+
+      // BUTTONS
+      let rows = '';
+      for(let i=0; i<pad.buttons.length; ++i){
+        const name = getButtonName(i);
+        const btn = pad.buttons[i];
+        // LT (6) and RT (7): show analog value, but also highlight if pressed
+        let triggerClass = '';
+        if(i === 6 || i === 7){
+          if(btn.pressed) triggerClass = 'pressed';
+          rows += `<tr class="${triggerClass}"><td>${name}</td><td class="btn-index">${i}</td><td>${btn.value.toFixed(2)}</td></tr>`;
+          continue;
+        }
+        let state = '', rowCls = '';
+        if(btn.pressed){
+          state = 'Pressed';
+          rowCls = 'pressed';
+        } else if(btn.touched){
+          state = 'Touched';
+        } else {
+          state = '—';
+          rowCls = 'unpressed';
+        }
+        rows += `<tr class="${rowCls}"><td>${name}</td><td class="btn-index">${i}</td><td>${state}</td></tr>`;
+      }
+      btnTbody.innerHTML = rows;
+    }
+
+    function scanGamepads() {
+      const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+      let found = false, pad = null, idx = null;
+      if(activePadIdx !== null && pads[activePadIdx] && pads[activePadIdx].connected){
+        pad = pads[activePadIdx];
+        idx = activePadIdx;
+        found = true;
+      } else {
+        for(let i=0; i<pads.length; ++i){
+          if(pads[i] && pads[i].connected){
+            pad = pads[i];
+            idx = i;
+            found = true;
+            break;
+          }
+        }
+      }
+      if(found && pad){
+        tester.style.display = '';
+        notConn.style.display = 'none';
+        activePadIdx = idx;
+        renderGamepad(pad);
+      } else {
+        tester.style.display = 'none';
+        notConn.style.display = '';
+        activePadIdx = null;
+      }
+      requestAnimationFrame(scanGamepads);
+    }
+
+    window.addEventListener('gamepadconnected', e => {
+      notConn.style.display = 'none';
+      tester.style.display = '';
+      activePadIdx = e.gamepad.index;
+    });
+    window.addEventListener('gamepaddisconnected', e => {
+      tester.style.display = 'none';
+      notConn.style.display = '';
+      activePadIdx = null;
+    });
+    window.onload = () => requestAnimationFrame(scanGamepads);
+  </script>
+</body>
+</html>
