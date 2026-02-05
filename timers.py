@@ -83,7 +83,7 @@ def dfs(target, elapsed, history, timers):
 		ok = True
 
 		for i in option:
-			if timers[i].just_started():
+			if timers[i].just_started():		# Is this even possible??
 				ok = False
 				break
 
@@ -110,3 +110,5 @@ def solve(target, size_list):
 
 
 solve(9, [4, 7])
+solve(15, [7, 11])
+solve(13, [5, 9])
