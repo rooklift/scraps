@@ -8,12 +8,23 @@
 #	(target, elapsed, (top, bottom), (top, bottom) ...)
 #	So timers are in positions [2:]
 #	Number of timers is len(foo) - 2
+#
+# Note: at each decision point, a move is some combination of
+# flips. We never consider the null move (flipping nothing)
+# because, if we reach a decision point and don't flip something,
+# we didn't need to start the timer that led to this decision
+# point existing, so this solution is over-complicated at best.
+
 
 from itertools import combinations
 
 
-def index_combos(list_length):
-	return [list(c) for r in range(list_length + 1) for c in combinations(range(list_length), r)]
+def non_empty_subsets_below_n(n):				# GPT-5.2, seems to work.
+	return [
+		list(c)
+		for r in range(1, n + 1)
+		for c in combinations(range(n), r)
+	]
 
 
 def is_solution(state):
@@ -25,21 +36,8 @@ def is_dead_end(state):
 
 
 def get_possible_moves(state):
-
 	timers = state[2:]
-	combos = index_combos(len(timers))			# e.g. [ [], [0], [1], [0, 1] ]
-
-	ret = []
-
-	for option in combos:
-		if len(option) == 0:					# Don't use this (continue) if no timer is active.
-			if any(timer[0] > 0 for timer in timers):
-				ret.append(option)
-		else:
-			ret.append(option)
-
-	return ret
-
+	return non_empty_subsets_below_n(len(timers))
 
 def apply_move(state, move):					# A move is a list of indices to flip where 0 means the first timer, which is offset by 2 in the state tuple.
 
@@ -72,7 +70,7 @@ def dfs(state, seen = None):
 	if seen is None:
 		seen = set()
 
-	if state in seen:
+	if state in seen:		# We already passed through this state (which evidently didn't find a solution).
 		return None
 
 	seen.add(state)
