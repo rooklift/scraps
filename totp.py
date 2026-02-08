@@ -4,7 +4,7 @@ import struct
 import time
 import base64
 
-SECRET = ""  # Base32-encoded secret, should be set on first use.
+SECRET = "FIXME"  # Base32-encoded secret, should be set on first use.
 
 def get_totp(secret, interval=30):
 	key = base64.b32decode(secret, casefold=True)
