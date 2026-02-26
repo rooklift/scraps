@@ -37,37 +37,13 @@ def get_remaining_time(unix_seconds, interval):
 	return interval - (unix_seconds % interval)
 
 
-def int_as_8_bytes(n):														# Big-endian. Could use struct.pack(">Q", n) for this.
-	ret = bytearray(8)
-	for i in range(8):
-		foo = n >> ((7 - i) * 8)
-		foo &= 0xff
-		ret[i] = foo
-	return bytes(ret)
-
-
-def bytes_to_int(b):														# Big-endian. Could use int.from_bytes(b, "big") for this.
-	ret = 0
-	for by in b:
-		ret *= 256
-		ret += by
-	return ret
-
-
-def extract_code_from_digest(dig):
-	assert(len(dig) == 20)
-	offset = dig[-1] & 0x0f													# Last nibble determines where to read.
-	long_code = bytes_to_int(dig[offset : offset + 4]) & 0x7fffffff			# Spec says screen-out sign-bit.
-	ret = str(long_code % 1000000)
-	while len(ret) < 6:
-		ret = "0" + ret
-	return ret
-
-
 def get_totp(secret, counter):
 	key = base64.b32decode(secret, casefold = True)
-	mac = hmac.new(key, int_as_8_bytes(counter), hashlib.sha1).digest()
-	return extract_code_from_digest(mac)
+	counter_bytes = struct.pack(">Q", counter)
+	mac = hmac.new(key, counter_bytes, hashlib.sha1).digest()
+	offset = mac[-1] & 0x0F
+	code = struct.unpack(">I", mac[offset:offset + 4])[0] & 0x7FFFFFFF
+	return str(code % 1_000_000).zfill(6)
 
 
 if __name__ == "__main__":
