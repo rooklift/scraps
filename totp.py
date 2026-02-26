@@ -1,9 +1,4 @@
-import hmac
-import hashlib
-import struct
-import time
-import base64
-import argparse
+import argparse, base64, hashlib, hmac, struct, time
 
 
 def main():
