@@ -27,17 +27,17 @@ def loop(secret, interval, digits):
 		t = time.time()
 		code = get_totp(secret, get_counter(t, interval))
 		remaining = get_remaining_time(t, interval)
-		print(f"{display_code(code)}  (expires in {int(remaining)}s)")
+		print(f"{display_code(code, digits)}  (expires in {int(remaining)}s)")
 		time.sleep(remaining + 0.5)
 
 
 def get_totp(secret, counter):
 	key = base64.b32decode(secret, casefold = True)
 	mac = hmac.new(key, int_as_8_bytes(counter), hashlib.sha1).digest()
-	return extract_code_from_digest(mac)
+	return extract_totp_from_digest(mac)
 
 
-def extract_code_from_digest(dig):
+def extract_totp_from_digest(dig):
 	assert(len(dig) == 20)
 	offset = dig[-1] & 0x0f													# Last nibble determines where to read.
 	return bytes_to_int(dig[offset : offset + 4]) & 0x7fffffff				# Spec says screen-out sign-bit.
