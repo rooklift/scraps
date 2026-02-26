@@ -33,14 +33,14 @@ def loop(secret, interval, digits):
 
 def get_totp(secret, counter):
 	key = base64.b32decode(secret, casefold = True)
-	mac = hmac.new(key, int_as_8_bytes(counter), hashlib.sha1).digest()
+	mac = hmac.new(key, counter.to_bytes(8, "big"), hashlib.sha1).digest()
 	return extract_totp_from_digest(mac)
 
 
 def extract_totp_from_digest(dig):
 	assert(len(dig) == 20)
 	offset = dig[-1] & 0x0f													# Last nibble determines where to read.
-	return bytes_to_int(dig[offset : offset + 4]) & 0x7fffffff				# Spec says screen-out sign-bit.
+	return int.from_bytes(dig[offset : offset + 4], "big") & 0x7fffffff		# Spec says screen-out sign-bit.
 
 
 def get_counter(unix_seconds, interval):
@@ -49,23 +49,6 @@ def get_counter(unix_seconds, interval):
 
 def get_remaining_time(unix_seconds, interval):
 	return interval - (unix_seconds % interval)
-
-
-def int_as_8_bytes(n):														# Big-endian. Could use struct.pack(">Q", n) for this.
-	ret = bytearray(8)
-	for i in range(8):
-		foo = n >> ((7 - i) * 8)
-		foo &= 0xff
-		ret[i] = foo
-	return bytes(ret)
-
-
-def bytes_to_int(b):														# Big-endian. Could use int.from_bytes(b, "big") for this.
-	ret = 0
-	for by in b:
-		ret *= 256
-		ret += by
-	return ret
 
 
 def display_code(code, digits):
