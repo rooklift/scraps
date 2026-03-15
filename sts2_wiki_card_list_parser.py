@@ -29,7 +29,7 @@ for filename in sys.argv[1:]:
 		line = line.strip()
 
 		if line.startswith("[") and line.endswith("] = {"):
-			if card_name or card:
+			if card_name or card or cost_plus:
 				raise ValueError
 			card_name = line[2:-6]
 			card = dict()
