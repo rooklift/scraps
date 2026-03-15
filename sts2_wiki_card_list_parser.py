@@ -1,38 +1,41 @@
 import json, sys
 
-with open(sys.argv[1], encoding="utf8") as infile:
-	raw = infile.read()
+for filename in sys.argv[1:]:
 
-cards = dict()
+	with open(filename, encoding="utf8") as infile:
+		raw = infile.read()
 
-cardname = ""
-card = dict()
+	cards = dict()
 
-n = 0
+	cardname = ""
+	card = None
 
-for line in raw.split("\n"):
+	n = 0
 
-	n += 1
+	for line in raw.split("\n"):
 
-	line = line.strip()
+		n += 1
 
-	if line.endswith(","):
-		line = line[0:-1]
+		line = line.strip()
 
-	if line.startswith("[") and line.endswith("] = {"):
-		cardname = line[2:-6]
-	elif line.startswith("Cost ="):
-		card["cost"] = line.split("=")[1].strip().replace("\"", "")
-	elif line.startswith("Type ="):
-		card["type"] = line.split("=")[1].strip().replace("\"", "")
-	elif line.startswith("Text ="):
-		card["text"] = line.split("=")[1].strip().replace("\"", "").replace("<br>", " ").replace("“", "'").replace("”", "'")
+		if line.endswith(","):
+			line = line[0:-1]
 
-	if cardname and len(card) == 3:
-		cards[cardname] = card
-		cardname = ""
-		card = dict()
+		if line.startswith("[") and line.endswith("] = {"):
+			cardname = line[2:-6]
+			card = dict()
+		elif line.startswith("Cost ="):
+			card["cost"] = line.split("=")[1].strip().replace("\"", "")
+		elif line.startswith("Type ="):
+			card["type"] = line.split("=")[1].strip().replace("\"", "")
+		elif line.startswith("Text ="):
+			card["text"] = line.split("=")[1].strip().replace("\"", "").replace("<br>", " ").replace("“", "'").replace("”", "'")
 
-with open(sys.argv[1][0:-3] + "json", "w") as outfile:
-	outfile.write(json.dumps(cards, indent = 4))
+		if cardname and len(card) == 3:
+			cards[cardname] = card
+			cardname = ""
+			card = None
+
+	with open(filename[0:filename.rindex(".")] + ".json", "w") as outfile:
+		outfile.write(json.dumps(cards, indent = 4))
 
