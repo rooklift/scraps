@@ -10,11 +10,7 @@ for filename in sys.argv[1:]:
 	cardname = ""
 	card = None
 
-	n = 0
-
 	for line in raw.split("\n"):
-
-		n += 1
 
 		line = line.strip()
 
