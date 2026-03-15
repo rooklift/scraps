@@ -18,31 +18,35 @@ for filename in sys.argv[1:]:
 
 	cards = dict()
 
-	cardname = ""
+	card_name = ""
 	card = None
+	cost_plus = None
 
 	for line in raw.split("\n"):
 
 		line = line.strip()
 
 		if line.startswith("[") and line.endswith("] = {"):
-			if cardname or card:
+			if card_name or card:
 				raise ValueError
-			cardname = line[2:-6]
+			card_name = line[2:-6]
 			card = dict()
 		elif line.startswith("Cost ="):
 			card["cost"] = "X" if extract_value(line) == "-1" else extract_value(line)
 		elif line.startswith("CostPlus ="):
-			card["cost"] = "[" + card["cost"] + "|" + extract_value(line) + "]"		# Assumes CostPlus line comes after Cost (but will throw if not)
+			cost_plus = extract_value(line)
 		elif line.startswith("Type ="):
 			card["type"] = extract_value(line)
 		elif line.startswith("Text ="):
 			card["text"] = extract_value(line)
-
-		if cardname and len(card) == 3:
-			cards[cardname] = card
-			cardname = ""
+		elif line == "}" or line == "},":
+			if card_name and len(card) == 3:
+				if cost_plus:
+					card["cost"] = "[" + card["cost"] + "|" + cost_plus + "]"
+				cards[card_name] = card
+			card_name = ""
 			card = None
+			cost_plus = None
 
 	with open(filename[0:filename.rindex(".")] + ".json", "w") as outfile:
 		outfile.write(json.dumps(cards, indent = 4))
