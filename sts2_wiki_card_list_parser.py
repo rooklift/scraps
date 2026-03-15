@@ -21,11 +21,11 @@ for line in raw.split("\n"):
 
 	if line.startswith("[") and line.endswith("] = {"):
 		cardname = line[2:-6]
-	elif line.startswith("Cost"):
-		card["cost"] = int(line.split("=")[1])
-	elif line.startswith("Type"):
+	elif line.startswith("Cost ="):
+		card["cost"] = line.split("=")[1].strip().replace("\"", "")
+	elif line.startswith("Type ="):
 		card["type"] = line.split("=")[1].strip().replace("\"", "")
-	elif line.startswith("Text"):
+	elif line.startswith("Text ="):
 		card["text"] = line.split("=")[1].strip().replace("\"", "").replace("<br>", " ").replace("“", "'").replace("”", "'")
 
 	if cardname and len(card) == 3:
