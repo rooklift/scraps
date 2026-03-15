@@ -31,7 +31,7 @@ for filename in sys.argv[1:]:
 			cardname = line[2:-6]
 			card = dict()
 		elif line.startswith("Cost ="):
-			card["cost"] = extract_value(line)
+			card["cost"] = "X" if extract_value(line) == "-1" else extract_value(line)
 		elif line.startswith("CostPlus ="):
 			card["cost"] = "[" + card["cost"] + "|" + extract_value(line) + "]"		# Assumes CostPlus line comes after Cost (but will throw if not)
 		elif line.startswith("Type ="):
