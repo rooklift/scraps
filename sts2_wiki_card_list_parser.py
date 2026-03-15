@@ -14,7 +14,9 @@ def extract_value(s):
 for filename in sys.argv[1:]:
 
 	with open(filename, encoding="utf8") as infile:
-		raw = infile.read()
+		raw = infile.read().strip()
+
+	all_lines = raw.split("\n")
 
 	cards = dict()
 
@@ -22,7 +24,7 @@ for filename in sys.argv[1:]:
 	card = None
 	cost_plus = None
 
-	for line in raw.split("\n"):
+	for n, line in enumerate(all_lines):
 
 		line = line.strip()
 
@@ -44,9 +46,13 @@ for filename in sys.argv[1:]:
 				if cost_plus:
 					card["cost"] = "[" + card["cost"] + "|" + cost_plus + "]"
 				cards[card_name] = card
-			card_name = ""
-			card = None
-			cost_plus = None
+				card_name = ""
+				card = None
+				cost_plus = None
+			elif n == len(all_lines) - 1:
+				break
+			else:
+				raise ValueError
 
 	with open(filename[0:filename.rindex(".")] + ".json", "w") as outfile:
 		outfile.write(json.dumps(cards, indent = 4))
