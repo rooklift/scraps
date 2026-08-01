@@ -1,3 +1,6 @@
+# Considered unsafe, use detargz2.py instead.
+
+"""
 import tarfile
 import sys
 import os.path
@@ -71,3 +74,4 @@ infile.extractall(outdir)
 infile.close()
 print("Done. Press return.")
 input()
+"""
