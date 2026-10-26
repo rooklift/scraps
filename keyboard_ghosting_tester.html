@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Keyboard Ghosting Tester</title>
+<style>
+	:root {
+		--u: min(46px, calc((100vw - 48px) / 23));
+	}
+	body {
+		font-family: system-ui, sans-serif;
+		background: #18191f;
+		color: #d8dbe0;
+		margin: 0;
+		padding: 24px;
+		user-select: none;
+	}
+	h1 {
+		font-size: 20px;
+		font-weight: 600;
+		margin: 0 0 16px 0;
+	}
+	#board {
+		position: relative;
+		width: calc(var(--u) * 23);
+		height: calc(var(--u) * 6.25);
+		margin-bottom: 20px;
+	}
+	.key {
+		position: absolute;
+		box-sizing: border-box;
+		padding: calc(var(--u) * 0.08) calc(var(--u) * 0.12);
+		border-radius: 5px;
+		background: #2c2e38;
+		color: #8d93a0;
+		font-size: calc(var(--u) * 0.24);
+		line-height: 1.15;
+		white-space: pre;
+		overflow: hidden;
+	}
+	.key.tested {
+		background: #233c58;
+		color: #b6cbe4;
+	}
+	.key.down {
+		background: #3ddc84;
+		color: #0b1a10;
+	}
+	.key.iso_enter {
+		clip-path: polygon(0 0, 100% 0, 100% 100%, calc(var(--u) * 0.25) 100%, calc(var(--u) * 0.25) calc(var(--u) - 4px), 0 calc(var(--u) - 4px));
+	}
+	#panel {
+		display: flex;
+		gap: 32px;
+		flex-wrap: wrap;
+		align-items: flex-start;
+	}
+	.stat {
+		margin-bottom: 12px;
+	}
+	.stat .big {
+		font-size: 32px;
+		font-weight: 700;
+		color: #fff;
+	}
+	.stat .list {
+		font-family: Consolas, monospace;
+		font-size: 13px;
+		color: #9fe8bf;
+		max-width: 420px;
+		min-height: 1.2em;
+	}
+	button {
+		font: inherit;
+		background: #2c2e38;
+		color: #d8dbe0;
+		border: 1px solid #454856;
+		border-radius: 5px;
+		padding: 6px 12px;
+		margin-right: 8px;
+		cursor: pointer;
+	}
+	button:hover {
+		background: #383b47;
+	}
+	#log {
+		font-family: Consolas, monospace;
+		font-size: 12px;
+		line-height: 1.4;
+		background: #111216;
+		border: 1px solid #2c2e38;
+		border-radius: 5px;
+		padding: 8px 10px;
+		width: 420px;
+		height: 260px;
+		overflow: hidden;
+		white-space: pre;
+	}
+	#log .up {
+		color: #6c7280;
+	}
+	#log .note {
+		color: #e8c46a;
+	}
+	#notes {
+		font-size: 13px;
+		color: #8d93a0;
+		max-width: 520px;
+		line-height: 1.5;
+	}
+	#notes p {
+		margin: 0 0 8px 0;
+	}
+	.swatch {
+		display: inline-block;
+		width: 10px;
+		height: 10px;
+		border-radius: 2px;
+		vertical-align: middle;
+	}
+</style>
+</head>
+<body>
+
+<h1>Keyboard Ghosting Tester (UK ISO)</h1>
+
+<div id="board"></div>
+
+<div id="panel">
+	<div>
+		<div class="stat">
+			<div>Held now</div>
+			<div class="big" id="held_count">0</div>
+			<div class="list" id="held_list"></div>
+		</div>
+		<div class="stat">
+			<div>Most held at once</div>
+			<div class="big" id="max_count">0</div>
+			<div class="list" id="max_list"></div>
+		</div>
+		<div class="stat">
+			<div>Keys tested: <span id="tested_count">0</span> / <span id="total_count">0</span></div>
+		</div>
+		<div>
+			<button id="reset_button">Reset</button>
+			<button id="lock_button">Fullscreen + keyboard lock</button>
+		</div>
+	</div>
+	<div id="log"></div>
+	<div id="notes">
+		<p>
+			<span class="swatch" style="background: #3ddc84"></span> held &nbsp;
+			<span class="swatch" style="background: #233c58"></span> pressed at some point &nbsp;
+			<span class="swatch" style="background: #2c2e38"></span> never pressed
+		</p>
+		<p>
+			Hold down a combination of keys. If a key you are pressing doesn't light up, it is being
+			<b>blocked</b>. If a key you are <i>not</i> pressing lights up, that is <b>ghosting</b>.
+		</p>
+		<p>
+			Windows quirks: Alt Gr also sends a fake left Ctrl. With Num Lock on, Shift + a numpad key
+			makes Windows send a fake Shift release. Print Screen only sends a release, so it never
+			shows as held, just as pressed. The Win key and things like Ctrl+W / Alt+Tab
+			can't be captured unless you use the fullscreen + keyboard lock button (Chromium-based
+			browsers only; hold Esc to leave).
+		</p>
+		<p>
+			Keys not on the diagram still appear in the "held" list and log.
+		</p>
+	</div>
+</div>
+
+<script>
+"use strict";
+
+// Each key: code (as in KeyboardEvent.code), label, x, y, w, h -- all in key units.
+
+let keys = [];
+
+function add(code, label, x, y, w = 1, h = 1, extra_class = "") {
+	keys.push({code, label, x, y, w, h, extra_class});
+}
+
+function row(y, x, specs) {
+	for (let [code, label, w = 1] of specs) {
+		add(code, label, x, y, w);
+		x += w;
+	}
+}
+
+function letters(s) {
+	return s.split("").map(c => ["Key" + c, c]);
+}
+
+// Function row
+
+row(0, 0, [["Escape", "Esc"]]);
+row(0, 2, [["F1", "F1"], ["F2", "F2"], ["F3", "F3"], ["F4", "F4"]]);
+row(0, 6.5, [["F5", "F5"], ["F6", "F6"], ["F7", "F7"], ["F8", "F8"]]);
+row(0, 11, [["F9", "F9"], ["F10", "F10"], ["F11", "F11"], ["F12", "F12"]]);
+
+// Main block
+
+row(1.25, 0, [
+	["Backquote", "¬\n`"], ["Digit1", "!\n1"], ["Digit2", "\"\n2"], ["Digit3", "£\n3"], ["Digit4", "$\n4"],
+	["Digit5", "%\n5"], ["Digit6", "^\n6"], ["Digit7", "&\n7"], ["Digit8", "*\n8"], ["Digit9", "(\n9"],
+	["Digit0", ")\n0"], ["Minus", "_\n-"], ["Equal", "+\n="], ["Backspace", "Backspace", 2],
+]);
+
+row(2.25, 0, [
+	["Tab", "Tab", 1.5], ...letters("QWERTYUIOP"), ["BracketLeft", "{\n["], ["BracketRight", "}\n]"],
+]);
+
+add("Enter", "Enter", 13.5, 2.25, 1.5, 2, "iso_enter");
+
+row(3.25, 0, [
+	["CapsLock", "Caps Lock", 1.75], ...letters("ASDFGHJKL"), ["Semicolon", ":\n;"], ["Quote", "@\n'"], ["Backslash", "~\n#"],
+]);
+
+row(4.25, 0, [
+	["ShiftLeft", "Shift", 1.25], ["IntlBackslash", "|\n\\"], ...letters("ZXCVBNM"),
+	["Comma", "<\n,"], ["Period", ">\n."], ["Slash", "?\n/"], ["ShiftRight", "Shift", 2.75],
+]);
+
+row(5.25, 0, [
+	["ControlLeft", "Ctrl", 1.25], ["MetaLeft", "Win", 1.25], ["AltLeft", "Alt", 1.25], ["Space", "", 6.25],
+	["AltRight", "Alt Gr", 1.25], ["MetaRight", "Win", 1.25], ["ContextMenu", "Menu", 1.25], ["ControlRight", "Ctrl", 1.25],
+]);
+
+// Navigation block and arrows
+
+row(1.25, 15.5, [["Insert", "Ins"], ["Home", "Home"], ["PageUp", "PgUp"]]);
+row(2.25, 15.5, [["Delete", "Del"], ["End", "End"], ["PageDown", "PgDn"]]);
+add("ArrowUp", "↑", 16.5, 4.25);
+row(5.25, 15.5, [["ArrowLeft", "←"], ["ArrowDown", "↓"], ["ArrowRight", "→"]]);
+
+// Numpad, with Print Screen / Scroll Lock / Pause above it
+
+row(0, 20, [["PrintScreen", "Prt\nScr"], ["ScrollLock", "Scr\nLock"], ["Pause", "Pause"]]);
+row(1.25, 19, [["NumLock", "Num\nLock"], ["NumpadDivide", "/"], ["NumpadMultiply", "*"], ["NumpadSubtract", "-"]]);
+row(2.25, 19, [["Numpad7", "7\nHome"], ["Numpad8", "8\n↑"], ["Numpad9", "9\nPgUp"]]);
+add("NumpadAdd", "+", 22, 2.25, 1, 2);
+row(3.25, 19, [["Numpad4", "4\n←"], ["Numpad5", "5"], ["Numpad6", "6\n→"]]);
+row(4.25, 19, [["Numpad1", "1\nEnd"], ["Numpad2", "2\n↓"], ["Numpad3", "3\nPgDn"]]);
+add("NumpadEnter", "Enter", 22, 4.25, 1, 2);
+row(5.25, 19, [["Numpad0", "0\nIns", 2], ["NumpadDecimal", ".\nDel"]]);
+
+// ------------------------------------------------------------------------------------------------
+
+let board = document.getElementById("board");
+let elements = Object.create(null);		// code --> div
+
+for (let k of keys) {
+	let el = document.createElement("div");
+	el.className = "key " + k.extra_class;
+	el.style.left = `calc(var(--u) * ${k.x} + 2px)`;
+	el.style.top = `calc(var(--u) * ${k.y} + 2px)`;
+	el.style.width = `calc(var(--u) * ${k.w} - 4px)`;
+	el.style.height = `calc(var(--u) * ${k.h} - 4px)`;
+	el.textContent = k.label;
+	el.title = k.code;
+	board.appendChild(el);
+	elements[k.code] = el;
+}
+
+let held = new Set();			// Sets keep insertion order, so this lists keys in the order pressed
+let tested = new Set();
+let max_held = [];
+let log_lines = [];
+
+document.getElementById("total_count").textContent = keys.length;
+
+function draw() {
+	for (let [code, el] of Object.entries(elements)) {
+		el.classList.toggle("down", held.has(code));
+		el.classList.toggle("tested", tested.has(code) && !held.has(code));
+	}
+	document.getElementById("held_count").textContent = held.size;
+	document.getElementById("held_list").textContent = [...held].join("  ");
+	document.getElementById("max_count").textContent = max_held.length;
+	document.getElementById("max_list").textContent = max_held.join("  ");
+	document.getElementById("tested_count").textContent = [...tested].filter(code => elements[code]).length;
+}
+
+function log(s, cls = "") {
+	let t = (performance.now() / 1000).toFixed(3).padStart(9);
+	log_lines.unshift(`<div class="${cls}">${t}  ${escape_html(s)}</div>`);
+	log_lines.length = Math.min(log_lines.length, 20);
+	document.getElementById("log").innerHTML = log_lines.join("");
+}
+
+function escape_html(s) {
+	return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function code_of(e) {
+	return e.code || `(no code, key ${JSON.stringify(e.key)})`;
+}
+
+window.addEventListener("keydown", e => {
+	e.preventDefault();
+	if (e.repeat) {
+		return;
+	}
+	let code = code_of(e);
+	held.add(code);
+	tested.add(code);
+	if (held.size > max_held.length) {
+		max_held = [...held];
+	}
+	log(`down  ${code.padEnd(16)} key ${JSON.stringify(e.key).padEnd(12)} held ${held.size}`);
+	draw();
+});
+
+window.addEventListener("keyup", e => {
+	e.preventDefault();
+	let code = code_of(e);
+	held.delete(code);
+	tested.add(code);			// Print Screen only sends a keyup on Windows
+	log(`up    ${code.padEnd(16)} key ${JSON.stringify(e.key).padEnd(12)} held ${held.size}`, "up");
+	draw();
+});
+
+// Keyups are lost when the window loses focus (Alt+Tab, Win key, etc) so forget everything held.
+
+window.addEventListener("blur", () => {
+	if (held.size > 0) {
+		held.clear();
+		log("window lost focus -- cleared held keys", "note");
+		draw();
+	}
+});
+
+window.addEventListener("contextmenu", e => e.preventDefault());
+
+document.getElementById("reset_button").addEventListener("click", e => {
+	e.currentTarget.blur();
+	held.clear();
+	tested.clear();
+	max_held = [];
+	log_lines = [];
+	document.getElementById("log").innerHTML = "";
+	draw();
+});
+
+document.getElementById("lock_button").addEventListener("click", async e => {
+	e.currentTarget.blur();
+	try {
+		await document.documentElement.requestFullscreen();
+		if (navigator.keyboard && navigator.keyboard.lock) {
+			await navigator.keyboard.lock();
+			log("keyboard locked (hold Esc to exit fullscreen)", "note");
+		} else {
+			log("keyboard lock not supported by this browser", "note");
+		}
+	} catch (err) {
+		log("fullscreen / lock failed: " + err.message, "note");
+	}
+});
+
+document.addEventListener("fullscreenchange", () => {
+	if (!document.fullscreenElement && navigator.keyboard && navigator.keyboard.unlock) {
+		navigator.keyboard.unlock();
+	}
+});
+
+draw();
+</script>
+</body>
+</html>
